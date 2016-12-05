@@ -18,10 +18,10 @@ import scala.swing.TextComponent;
 import scala.tools.nsc.ScalaDoc.Command;
 import swagClan.net.gatesPlus.Main;
 
-public class CommandMain implements ICommand{
+public class CommandMain implements ICommand {
 	public Main main;
 	private List commands;
-	
+
 	public CommandMain(Main main, FMLServerStartingEvent event) {
 		this.main = main;
 		this.commands = new ArrayList();
@@ -29,7 +29,6 @@ public class CommandMain implements ICommand{
 		this.commands.add("gp");
 		event.registerServerCommand(this);
 	}
-	
 
 	@Override
 	public int compareTo(ICommand o) {
