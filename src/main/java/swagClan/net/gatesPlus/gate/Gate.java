@@ -3,6 +3,7 @@ package swagClan.net.gatesPlus.gate;
 import java.util.ArrayList;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.text.TextComponentString;
 import swagClan.net.gatesPlus.Main;
 
 public class Gate {
@@ -14,6 +15,8 @@ public class Gate {
 	private boolean opengate;
 	private CheckTimer checkTimer;
 	private Animatie animatie;
+	private String naam;
+	private int id;
 
 	public Gate(Main main) {
 		this.main = main;
@@ -51,11 +54,50 @@ public class Gate {
 	}
 
 	/**
-	 * Clears the gateBlocks by setting these blocks to air
+	 * Clears the gateBlocks by setting these blocks to air and sends a message
+	 * to the corresponding player
 	 */
 	public void clear() {
-		//TODO: clear timers
-		//TODO: set all blocks of the gate to air
+		// TODO: set all blocks air
+		checkTimer.stopTimer();
+		animatie.stopTimer();
+		player.addChatMessage(new TextComponentString("Your gate " + naam + " has been removed"));
+	}
+
+	/**
+	 * Returns the name of the gate
+	 * 
+	 * @return String
+	 */
+	public String getNaam() {
+		return naam;
+	}
+
+	/**
+	 * Sets the name of the gate
+	 * 
+	 * @param naam
+	 */
+	public void setNaam(String naam) {
+		this.naam = naam;
+	}
+
+	/**
+	 * Returns the ID of the gate
+	 * 
+	 * @return int
+	 */
+	public int getId() {
+		return id;
+	}
+
+	/**
+	 * Sets the ID of the gate
+	 * 
+	 * @param id
+	 */
+	public void setId(int id) {
+		this.id = id;
 	}
 
 }

@@ -42,8 +42,8 @@ public class MyPlayer {
 	 * @return true if success
 	 */
 	public boolean removeGate(Gate gate) {
-		for (Gate g : gates){
-			if (getClass().equals(gate)){
+		for (Gate g : gates) {
+			if (getClass().equals(gate)) {
 				g.clear();
 				break;
 			}

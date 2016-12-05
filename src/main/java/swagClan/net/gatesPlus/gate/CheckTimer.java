@@ -13,10 +13,12 @@ public class CheckTimer extends Thread {
 	private Main main;
 	private ArrayList poweredBloks;
 	private Gate gate;
+	private boolean running;
 
 	public CheckTimer(Main main, Gate gate) {
 		this.main = main;
 		this.gate = gate;
+		this.running = true;
 	}
 
 	/**
@@ -37,6 +39,13 @@ public class CheckTimer extends Thread {
 		CheckTimer.check_interval = check_interval;
 	}
 
+	/**
+	 * this stops the timer from running
+	 */
+	public void stopTimer() {
+		this.running = false;
+	}
+
 	@Override
 	public void run() {
 		boolean nitsgevonden = true;
@@ -52,6 +61,17 @@ public class CheckTimer extends Thread {
 		if (nitsgevonden) {
 			gate.setOpengate(false);
 		}
-	}
 
+		if (running) {
+			try {
+				this.sleep(check_interval);
+				this.start();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} else {
+			// eventuele clearing variabele
+		}
+	}
 }
