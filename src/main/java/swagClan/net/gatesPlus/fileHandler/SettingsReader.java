@@ -1,8 +1,8 @@
-package swagClan.net.gatesPlus.bestandHandler;
+package swagClan.net.gatesPlus.fileHandler;
 
 import swagClan.net.gatesPlus.Main;
 
-public class SettingsReader extends Bestandslezer{
+public class SettingsReader extends FileReaderBase{
 	
 
 	public SettingsReader(Main main, String path){

@@ -1,15 +1,15 @@
-package swagClan.net.gatesPlus.bestandHandler;
+package swagClan.net.gatesPlus.fileHandler;
 
 import java.util.Scanner;
 
 import swagClan.net.gatesPlus.Main;
 
-public class Bestandslezer {
+public class FileReaderBase {
 	private Scanner scan;
 	private String path;
 	private Main main;
 	
-	public Bestandslezer(Main main, String path){
+	public FileReaderBase(Main main, String path){
 		this.main = main;
 		this.path = path;
 	}
