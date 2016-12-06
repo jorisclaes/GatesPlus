@@ -8,6 +8,7 @@ public class Animatie extends Thread {
 	private Gate gate;
 	private boolean running;
 	private boolean done;
+	private boolean animatie;
 	private int interval;
 
 	public Animatie(Main main, Gate gate) {
@@ -17,8 +18,27 @@ public class Animatie extends Thread {
 		this.done = true;
 	}
 
+	/**
+	 * Stops the timer from running
+	 */
 	public void stopTimer() {
 		this.running = false;
+	}
+	
+	/**
+	 * returns current interval
+	 * @return
+	 */
+	public int getInterval() {
+		return interval;
+	}
+	
+	/**
+	 * Sets the interval witch the timer uses in ms
+	 * @param interval
+	 */
+	public void setInterval(int interval) {
+		this.interval = interval;
 	}
 
 	@Override
@@ -36,7 +56,6 @@ public class Animatie extends Thread {
 					this.start();
 				}
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		} else {

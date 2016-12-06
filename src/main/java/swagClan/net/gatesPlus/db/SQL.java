@@ -43,7 +43,6 @@ public class SQL {
 			stm = c.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
 			rs = stm.executeQuery(sql);
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			return null;
 		}
 		return rs;
@@ -61,7 +60,6 @@ public class SQL {
 			cont = stm.executeUpdate(sql);
 			stm.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return -1;
 		}

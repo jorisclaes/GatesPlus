@@ -48,17 +48,17 @@ public class CheckTimer extends Thread {
 
 	@Override
 	public void run() {
-		boolean nitsgevonden = true;
+		boolean nietsgevonden = true;
 		for (Object o : poweredBloks) {
 			if (o instanceof Block) {
 				Block block = ((Block) o);
 				// TODO: if block is powered
 				gate.setOpengate(true);
-				nitsgevonden = false;
+				nietsgevonden = false;
 				break;
 			}
 		}
-		if (nitsgevonden) {
+		if (nietsgevonden) {
 			gate.setOpengate(false);
 		}
 
@@ -67,7 +67,6 @@ public class CheckTimer extends Thread {
 				this.sleep(check_interval);
 				this.start();
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		} else {

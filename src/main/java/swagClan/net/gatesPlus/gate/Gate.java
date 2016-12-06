@@ -2,6 +2,7 @@ package swagClan.net.gatesPlus.gate;
 
 import java.util.ArrayList;
 
+import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.text.TextComponentString;
 import swagClan.net.gatesPlus.Main;
@@ -10,7 +11,7 @@ public class Gate {
 
 	private Main main;
 	private EntityPlayer player;
-	private ArrayList gateBlocks;
+	private ArrayList<Block> gateBlocks;
 	private ArrayList poweredBlocks;
 	private boolean opengate;
 	private CheckTimer checkTimer;
@@ -22,6 +23,7 @@ public class Gate {
 		this.main = main;
 		checkTimer = new CheckTimer(main, this);
 		animatie = new Animatie(main, this);
+		gateBlocks = new ArrayList<Block>();
 	}
 
 	/**
@@ -58,7 +60,9 @@ public class Gate {
 	 * to the corresponding player
 	 */
 	public void clear() {
-		// TODO: set all blocks air
+		for(Block b : this.gateBlocks){
+			// TODO: set all blocks air
+		}
 		checkTimer.stopTimer();
 		animatie.stopTimer();
 		player.addChatMessage(new TextComponentString("Your gate " + naam + " has been removed"));
@@ -98,6 +102,21 @@ public class Gate {
 	 */
 	public void setId(int id) {
 		this.id = id;
+	}
+	
+	/**
+	 * Disables the animation
+	 */
+	public void setNoAnimation(){
+		this.animatie.setInterval(40);
+	}
+	
+	/**
+	 * Sets the animation interval in ms
+	 * @param ms
+	 */
+	public void setAnimationDelay(int ms){
+		this.animatie.setInterval(ms);
 	}
 
 }
