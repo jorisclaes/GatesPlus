@@ -17,6 +17,7 @@ import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import scala.swing.TextComponent;
 import scala.tools.nsc.ScalaDoc.Command;
 import swagClan.net.gatesPlus.Main;
+import swagClan.net.gatesPlus.entity.MyPlayer;
 
 public class CommandMain implements ICommand {
 	public Main main;
@@ -52,7 +53,12 @@ public class CommandMain implements ICommand {
 
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-		sender.addChatMessage(new TextComponentString("test"));
+		if (main.getPlayers().isEmpty())
+			sender.addChatMessage(new TextComponentString("hij is leeg"));
+		for (MyPlayer p : main.getPlayers()){
+			String txt = p.getPlayer().getName();
+			sender.addChatMessage(new TextComponentString(txt));
+		}
 	}
 
 	@Override

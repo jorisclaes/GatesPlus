@@ -30,13 +30,14 @@ public class SQL {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * Executes the query that is given in the SQL string
+	 * 
 	 * @param sql
 	 * @return
 	 */
-	public static ResultSet voerQryUit(String sql){
+	public static ResultSet voerQryUit(String sql) {
 		Statement stm = null;
 		ResultSet rs = null;
 		try {
@@ -47,12 +48,12 @@ public class SQL {
 		}
 		return rs;
 	}
-	
+
 	/**
 	 * @param sql
 	 * @return
 	 */
-	public static int exicuteUpdate(String sql){
+	public static int exicuteUpdate(String sql) {
 		int cont = -1;
 		Statement stm;
 		try {
@@ -65,12 +66,13 @@ public class SQL {
 		}
 		return cont;
 	}
-	
+
 	/**
 	 * This will try to close the connection
+	 * 
 	 * @throws SQLException
 	 */
-	public static void closeConnection() throws SQLException{
+	public static void closeConnection() throws SQLException {
 		c.close();
 	}
 }
