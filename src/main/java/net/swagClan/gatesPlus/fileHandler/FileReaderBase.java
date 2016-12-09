@@ -19,7 +19,7 @@ public class FileReaderBase {
 
 	public FileReaderBase(Main main) {
 		this.main = main;
-		this.path = "config/GatesPlus/";
+		this.path = "config/" + Main.MODID + "/";
 		;
 	}
 
