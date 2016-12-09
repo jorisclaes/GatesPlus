@@ -1,11 +1,11 @@
-package swagClan.net.gatesPlus.fileHandler;
+package net.swagClan.gatesPlus.fileHandler;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
 
-import swagClan.net.gatesPlus.Main;
-import swagClan.net.gatesPlus.db.SQL;
+import net.swagClan.gatesPlus.Main;
+import net.swagClan.gatesPlus.db.SQL;
 
 public class SettingsReader extends FileReaderBase{
 	

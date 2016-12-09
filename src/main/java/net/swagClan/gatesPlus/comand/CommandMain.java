@@ -1,4 +1,4 @@
-package swagClan.net.gatesPlus.comand;
+package net.swagClan.gatesPlus.comand;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,10 +14,10 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
+import net.swagClan.gatesPlus.Main;
+import net.swagClan.gatesPlus.entity.MyPlayer;
 import scala.swing.TextComponent;
 import scala.tools.nsc.ScalaDoc.Command;
-import swagClan.net.gatesPlus.Main;
-import swagClan.net.gatesPlus.entity.MyPlayer;
 
 public class CommandMain implements ICommand {
 	public Main main;

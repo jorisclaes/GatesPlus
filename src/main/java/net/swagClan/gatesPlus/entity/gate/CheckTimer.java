@@ -1,10 +1,10 @@
-package swagClan.net.gatesPlus.entity.gate;
+package net.swagClan.gatesPlus.entity.gate;
 
 import java.awt.List;
 import java.util.ArrayList;
 
 import net.minecraft.block.Block;
-import swagClan.net.gatesPlus.Main;
+import net.swagClan.gatesPlus.Main;
 
 public class CheckTimer extends Thread {
 

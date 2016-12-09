@@ -1,6 +1,6 @@
-package swagClan.net.gatesPlus.entity.gate;
+package net.swagClan.gatesPlus.entity.gate;
 
-import swagClan.net.gatesPlus.Main;
+import net.swagClan.gatesPlus.Main;
 
 public class Animatie extends Thread {
 

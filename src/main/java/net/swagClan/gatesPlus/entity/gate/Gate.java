@@ -1,11 +1,11 @@
-package swagClan.net.gatesPlus.entity.gate;
+package net.swagClan.gatesPlus.entity.gate;
 
 import java.util.ArrayList;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.text.TextComponentString;
-import swagClan.net.gatesPlus.Main;
+import net.swagClan.gatesPlus.Main;
 
 public class Gate {
 

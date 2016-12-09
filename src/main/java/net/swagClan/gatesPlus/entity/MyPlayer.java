@@ -1,10 +1,10 @@
-package swagClan.net.gatesPlus.entity;
+package net.swagClan.gatesPlus.entity;
 
 import java.util.ArrayList;
 
 import net.minecraft.entity.player.EntityPlayer;
-import swagClan.net.gatesPlus.Main;
-import swagClan.net.gatesPlus.entity.gate.Gate;
+import net.swagClan.gatesPlus.Main;
+import net.swagClan.gatesPlus.entity.gate.Gate;
 
 public class MyPlayer {
 

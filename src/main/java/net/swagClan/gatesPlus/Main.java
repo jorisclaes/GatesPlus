@@ -1,4 +1,4 @@
-package swagClan.net.gatesPlus;
+package net.swagClan.gatesPlus;
 
 import java.util.ArrayList;
 
@@ -9,10 +9,10 @@ import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
-import swagClan.net.gatesPlus.comand.CommandMain;
-import swagClan.net.gatesPlus.entity.MyPlayer;
-import swagClan.net.gatesPlus.event.MyPlayerEvent;
-import swagClan.net.gatesPlus.fileHandler.SettingsReader;
+import net.swagClan.gatesPlus.comand.CommandMain;
+import net.swagClan.gatesPlus.entity.MyPlayer;
+import net.swagClan.gatesPlus.event.MyPlayerEvent;
+import net.swagClan.gatesPlus.fileHandler.SettingsReader;
 
 @Mod(modid = Main.MODID, version = Main.VERSION)
 public class Main {

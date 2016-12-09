@@ -1,4 +1,4 @@
-package swagClan.net.gatesPlus.db;
+package net.swagClan.gatesPlus.db;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

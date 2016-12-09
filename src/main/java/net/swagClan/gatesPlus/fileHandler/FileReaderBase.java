@@ -1,4 +1,4 @@
-package swagClan.net.gatesPlus.fileHandler;
+package net.swagClan.gatesPlus.fileHandler;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -8,7 +8,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.Scanner;
 
-import swagClan.net.gatesPlus.Main;
+import net.swagClan.gatesPlus.Main;
 
 public class FileReaderBase {
 	private Scanner scan;
