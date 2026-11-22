@@ -88,8 +88,10 @@ public final class GpCommand {
 						.executes(GpCommand::info)))
 				.then(literal("rm").requires(Perms.REMOVE.require())
 						.then(argument("gate", StringArgumentType.word()).suggests(REMOVABLE_GATES).executes(GpCommand::remove)))
-				.then(literal("repair").then(argument("gate", StringArgumentType.word()).suggests(EDITABLE_GATES)
-						.executes(GpCommand::repair)))
+				.then(literal("repair")
+						.executes(GpCommand::repairSession)
+						.then(argument("gate", StringArgumentType.word()).suggests(EDITABLE_GATES)
+								.executes(GpCommand::repair)))
 				.then(GroupCommands.build())
 				.then(literal("reload").requires(Perms.ADMIN_RELOAD.require()).executes(GpCommand::reload))
 				.then(literal("devstats").requires(Perms.ADMIN_DEVSTATS.require()).executes(GpCommand::devstats)));
@@ -391,20 +393,46 @@ public final class GpCommand {
 		return 1;
 	}
 
+	/** /gp repair without a name: repairs the gate of the player's own edit session. */
+	private static int repairSession(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
+		ServerPlayer p = player(c);
+		CreateSession s = gates().sessions().get(p);
+		if (s == null) {
+			Messages.send(p, "repair.need_gate");
+			return 0;
+		}
+		if (s.type() == CreateSession.Type.CREATE) {
+			Messages.send(p, "repair.new_gate");
+			return 0;
+		}
+		Gate g = gates().manager().byId(s.gateId());
+		if (g == null) {
+			Messages.send(p, "edit.gone");
+			return 0;
+		}
+		return doRepair(p, g);
+	}
+
 	private static int repair(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
 		ServerPlayer p = player(c);
-		boolean admin = Perms.ADMIN_EDIT.check(p);
-		Gate g = gates().resolve(p, str(c, "gate"), admin);
-		if (g == null) return 0;
-		if (!admin && !gates().groups().canEdit(g, p.getUUID())) {
+		Gate g = gates().resolve(p, str(c, "gate"), Perms.ADMIN_EDIT.check(p));
+		return g == null ? 0 : doRepair(p, g);
+	}
+
+	private static int doRepair(ServerPlayer p, Gate g) {
+		if (!Perms.ADMIN_EDIT.check(p) && !gates().groups().canEdit(g, p.getUUID())) {
 			Messages.send(p, "no_permission");
 			return 0;
 		}
-		if (gates().isLocked(g)) {
+		// a gate being edited may only be repaired by the player editing it
+		CreateSession own = gates().sessions().get(p);
+		boolean ownEdit = own != null && own.type() == CreateSession.Type.EDIT && own.gateId() == g.id();
+		if (gates().isLocked(g) && !ownEdit) {
 			Messages.send(p, "edit.in_use", g.name());
 			return 0;
 		}
 		gates().repair(p, g);
+		if (own != null) gates().sessions().sync(p); // refresh "blocks x / y" in the info panel
 		return 1;
 	}
 

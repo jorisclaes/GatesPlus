@@ -15,7 +15,7 @@ help: |-
   &e/gp cancel &7– stop the session
   &e/gp edit <id|name> &7– change a gate
   &e/gp list &7– your gates  &e/gp info <id|name> &7– details
-  &e/gp repair <id|name> &7– repair using blocks from your inventory
+  &e/gp repair [id|name] &7– repair using blocks from your inventory (no name: the gate you are editing)
   &e/gp rm <id|name> &7– remove a gate
   &e/gp group create|delete|add|remove|list|members|gates|info &7– groups
 no_permission: "&cYou don't have permission to do that."
@@ -141,6 +141,8 @@ rm:
 
 repair:
   not_needed: "&7Gate {0} is not broken."
+  need_gate: "&cName a gate (/gp repair <id|name>) or start /gp edit <gate> first."
+  new_gate: "&7A new gate doesn't need repairing: /gp confirm takes the blocks from your inventory."
   need_trigger: "&eGate {0} has all its blocks but is missing a trigger block: /gp edit {0}"
   no_blocks: "&cYou don't carry any {3}. Gate {0}: {1} / {2} blocks."
   partial: "&eGate {0}: {1} / {2} blocks. Some are still missing."

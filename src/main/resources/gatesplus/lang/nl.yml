@@ -15,7 +15,7 @@ help: |-
   &e/gp cancel &7– stop de sessie
   &e/gp edit <id|naam> &7– pas een poort aan
   &e/gp list &7– jouw poorten  &e/gp info <id|naam> &7– details
-  &e/gp repair <id|naam> &7– herstel met blokken uit je inventory
+  &e/gp repair [id|naam] &7– herstel met blokken uit je inventory (zonder naam: de poort die je bewerkt)
   &e/gp rm <id|naam> &7– verwijder een poort
   &e/gp group create|delete|add|remove|list|members|gates|info &7– groepen
 no_permission: "&cDaar heb je geen rechten voor."
@@ -141,6 +141,8 @@ rm:
 
 repair:
   not_needed: "&7Poort {0} is niet kapot."
+  need_gate: "&cGeef een poort op (/gp repair <id|naam>) of start eerst /gp edit <poort>."
+  new_gate: "&7Een nieuwe poort hoeft niet hersteld te worden: bij /gp confirm worden de blokken uit je inventory gehaald."
   need_trigger: "&ePoort {0} heeft alle blokken, maar mist een trigger-blok: /gp edit {0}"
   no_blocks: "&cJe hebt geen {3} bij je. Poort {0}: {1} / {2} blokken."
   partial: "&ePoort {0}: {1} / {2} blokken. Er ontbreken er nog."
