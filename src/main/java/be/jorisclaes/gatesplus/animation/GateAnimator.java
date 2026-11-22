@@ -60,17 +60,21 @@ public final class GateAnimator {
 		final Gate gate;
 		final ServerLevel level;
 		final boolean opening;
+		final BlockState state;
 		/** Rows in animation order. */
 		final List<Row> rows = new ArrayList<>();
 		final long firstRowTick;
 		final int rowTicks;
+		/** Closing only: rows get their displays just before their turn (see {@link #tick}). */
+		int nextToSpawn;
 		int nextToStart;
 		int nextToFinish;
 
-		Animation(Gate gate, ServerLevel level, boolean opening, long firstRowTick, int rowTicks) {
+		Animation(Gate gate, ServerLevel level, boolean opening, BlockState state, long firstRowTick, int rowTicks) {
 			this.gate = gate;
 			this.level = level;
 			this.opening = opening;
+			this.state = state;
 			this.firstRowTick = firstRowTick;
 			this.rowTicks = rowTicks;
 		}
@@ -121,35 +125,51 @@ public final class GateAnimator {
 		cancel(gate);
 		int rowCount = GateGeometry.rowCount(gate);
 		// first row starts one tick after spawning, so clients have the start state first
-		Animation anim = new Animation(gate, level, opening, now + 1, rowTicks(gate));
+		Animation anim = new Animation(gate, level, opening, state, now + 1, rowTicks(gate));
 		for (int i = 0; i < rowCount; i++) anim.rows.add(new Row());
-
-		Transformation startState = opening ? full() : collapsed(gate);
 		for (BlockPos pos : GateGeometry.positions(gate)) {
-			Display.BlockDisplay display = EntityTypes.BLOCK_DISPLAY.create(level, EntitySpawnReason.TRIGGERED);
+			int row = GateGeometry.row(gate, pos);
+			// opening: first row first; closing: last row first (reverse order)
+			anim.rows.get(opening ? row : rowCount - 1 - row).positions.add(pos);
+		}
+
+		if (opening) {
+			// the real blocks are already gone: every row needs its (full-size) display right away
+			for (Row r : anim.rows) spawnRow(anim, r, full());
+			anim.nextToSpawn = rowCount;
+		} else {
+			// A collapsed display is still visible as a flat plane, so closing rows only appear when
+			// it is their turn: the first one now, the others one tick before they start.
+			spawnRow(anim, anim.rows.get(0), collapsed(gate));
+			anim.nextToSpawn = 1;
+		}
+		running.put(gate.id(), anim);
+	}
+
+	private void spawnRow(Animation a, Row row, Transformation startState) {
+		for (BlockPos pos : row.positions) {
+			Display.BlockDisplay display = EntityTypes.BLOCK_DISPLAY.create(a.level, EntitySpawnReason.TRIGGERED);
 			if (display == null) continue;
 			display.setPos(pos.getX(), pos.getY(), pos.getZ());
 			display.addTag(DISPLAY_TAG);
-			((BlockDisplayAccessor) display).gatesplus$setBlockState(state);
+			((BlockDisplayAccessor) display).gatesplus$setBlockState(a.state);
 			((DisplayAccessor) display).gatesplus$setViewRange(1.5f);
 			((DisplayAccessor) display).gatesplus$setTransformation(startState);
 			ownDisplays.add(display.getUUID());
-			level.addFreshEntity(display);
-
-			int row = GateGeometry.row(gate, pos);
-			// opening: first row first; closing: last row first (reverse order)
-			Row r = anim.rows.get(opening ? row : rowCount - 1 - row);
-			r.displays.add(display);
-			r.positions.add(pos);
+			a.level.addFreshEntity(display);
+			row.displays.add(display);
 		}
-		running.put(gate.id(), anim);
 	}
 
 	public void tick(long now) {
 		Iterator<Animation> it = running.values().iterator();
 		while (it.hasNext()) {
 			Animation a = it.next();
-			while (a.nextToStart < a.rows.size() && now >= a.rowStart(a.nextToStart)) {
+			while (a.nextToSpawn < a.rows.size() && now >= a.rowStart(a.nextToSpawn) - 1) {
+				spawnRow(a, a.rows.get(a.nextToSpawn), collapsed(a.gate));
+				a.nextToSpawn++;
+			}
+			while (a.nextToStart < a.nextToSpawn && now >= a.rowStart(a.nextToStart)) {
 				startRow(a, a.rows.get(a.nextToStart));
 				a.nextToStart++;
 			}
