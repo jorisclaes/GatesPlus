@@ -79,10 +79,12 @@ public final class GateTicker {
 		}
 		if (gate.status() == GateStatus.NO_TRIGGER) {
 			// a block is back on the trigger position: the gate works again immediately
-			service.restoreTrigger(gate, BuiltInRegistries.BLOCK.getKey(triggerState.getBlock()).toString());
+			service.restoreTrigger(level, gate, BuiltInRegistries.BLOCK.getKey(triggerState.getBlock()).toString());
 		}
 		if (!gate.status().isFunctional()) {
-			if (!gate.isOpen()) service.forceOpen(level, gate);
+			// broken / incomplete: the gate stays exactly as it is and ignores redstone; holes filled
+			// by hand with the right block are picked up by verify()
+			service.verify(level, gate, level.getGameTime(), false);
 			return;
 		}
 		if (!service.verify(level, gate, level.getGameTime(), false)) return;

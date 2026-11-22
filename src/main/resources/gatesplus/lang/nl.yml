@@ -115,8 +115,8 @@ trigger:
 gate:
   not_found: "&cGeen poort gevonden voor '{0}'."
   ambiguous: "&eMeerdere poorten heten '{0}': {1}. Gebruik het id of groep:naam."
-  incomplete: "&ePoort {0}: {1} / {2} blokken. &7Ze blijft open tot ze af is: /gp repair {0}"
-  broken: "&cPoort {0} is kapot: {1} / {2} blokken – /gp repair {0}"
+  incomplete: "&ePoort {0}: {1} / {2} blokken. &7Ze werkt pas als ze af is: /gp repair {0}"
+  broken: "&cPoort {0} is kapot en werkt niet meer: {1} / {2} blokken – /gp repair {0}"
   no_trigger: "&cHet trigger-blok van poort {0} is vernietigd; de poort staat open. Zet er een blok terug of kies een nieuw met /gp edit {0}."
   blocked: "&ePoort {0} kan niet sluiten: er staat iets in de opening."
   trigger_restored: "&aHet trigger-blok van poort {0} staat er weer; de poort werkt opnieuw."
@@ -146,6 +146,7 @@ repair:
   need_trigger: "&ePoort {0} heeft alle blokken, maar mist een trigger-blok: /gp edit {0}"
   no_blocks: "&cJe hebt geen {3} bij je. Poort {0}: {1} / {2} blokken."
   partial: "&ePoort {0}: {1} / {2} blokken. Er ontbreken er nog."
+  obstructed: "&cIn poort {0} staat iets in een gat; haal het weg om verder te herstellen."
   done: "&aPoort {0} hersteld: {1} / {2} blokken."
 
 chest:

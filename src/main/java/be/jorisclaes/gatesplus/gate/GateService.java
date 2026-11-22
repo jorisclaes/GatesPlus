@@ -208,11 +208,15 @@ public final class GateService {
 	}
 
 	/** Called by protection hooks and verification when gate blocks disappeared. */
+	/**
+	 * Gate blocks disappeared. The gate stays exactly as it is (remaining blocks stay in place, the
+	 * hole stays a hole) and simply stops working until it is repaired.
+	 */
 	public void markBroken(ServerLevel level, Gate gate, int lost) {
 		if (lost <= 0) return;
+		animator.cancel(gate); // finish a running animation first so all rows are real blocks
 		gate.lose(lost);
 		if (gate.status() != GateStatus.NO_TRIGGER) gate.setStatus(GateStatus.BROKEN);
-		forceOpen(level, gate);
 		save(gate);
 		notifyGate(gate, "gate.broken", gate.name(), gate.placedCount(), gate.totalCount());
 	}
@@ -230,10 +234,15 @@ public final class GateService {
 	 * status it would have without the trigger problem (OK, or INCOMPLETE when blocks are missing);
 	 * the ticker then closes it when the trigger is unpowered.
 	 */
-	public void restoreTrigger(Gate gate, String triggerBlock) {
+	public void restoreTrigger(ServerLevel level, Gate gate, String triggerBlock) {
 		if (gate.status() != GateStatus.NO_TRIGGER) return;
 		gate.setTrigger(gate.triggerX(), gate.triggerY(), gate.triggerZ(), triggerBlock);
 		gate.setStatus(gate.missingCount() == 0 ? GateStatus.OK : GateStatus.INCOMPLETE);
+		if (gate.status() == GateStatus.INCOMPLETE) {
+			// not all blocks invested: show the part that exists, the gate doesn't work yet
+			gate.setOpen(false);
+			placeBlocksUpTo(level, gate, gate.placedCount());
+		}
 		blockedNotified.remove(gate.id());
 		save(gate);
 		notifyGate(gate, "gate.trigger_restored", gate.name());
@@ -250,12 +259,40 @@ public final class GateService {
 			if (last != null && now - last < 100) return true;
 		}
 		lastVerify.put(gate.id(), now);
-		int missing = countMissing(level, gate);
-		if (missing > 0) {
-			markBroken(level, gate, missing);
+		int present = gate.totalCount() - countMissing(level, gate);
+		if (present < gate.placedCount()) {
+			markBroken(level, gate, gate.placedCount() - present);
 			return false;
 		}
+		if (present > gate.placedCount()) {
+			// a player filled a hole by hand with the right block: it now belongs to the gate
+			int added = present - gate.placedCount();
+			gate.invest(added, added);
+			if (gate.missingCount() == 0 && gate.status() != GateStatus.NO_TRIGGER) {
+				gate.setStatus(GateStatus.OK);
+				notifyGate(gate, "repair.done", gate.name(), gate.placedCount(), gate.totalCount());
+			}
+			save(gate);
+		}
 		return true;
+	}
+
+	/**
+	 * Places the gate block on the first {@code count} air positions, bottom row first. Used for gates
+	 * that are only partly paid for: that part is visible, the gate doesn't work until it is complete.
+	 */
+	public void placeBlocksUpTo(ServerLevel level, Gate gate, int count) {
+		BlockState state = stateOf(gate);
+		int placed = 0;
+		for (BlockPos pos : GateGeometry.positions(gate)) {
+			if (placed >= count) break;
+			if (level.getBlockState(pos).is(state.getBlock())) {
+				placed++;
+			} else if (level.getBlockState(pos).isAir()) {
+				level.setBlock(pos, state, Block.UPDATE_ALL);
+				placed++;
+			}
+		}
 	}
 
 	/** An open gate that wants to close but can't; tells the owner once. */
@@ -423,7 +460,7 @@ public final class GateService {
 		cand.invest(inv.placed(), inv.paid());
 		boolean complete = cand.placedCount() == cand.totalCount();
 		cand.setStatus(complete ? GateStatus.OK : GateStatus.INCOMPLETE);
-		cand.setOpen(!complete);
+		cand.setOpen(false);
 
 		int id;
 		try {
@@ -438,7 +475,7 @@ public final class GateService {
 		manager.add(cand);
 		manager.refreshActive(level, cand);
 		clearMarkers(level, cand);
-		if (complete) placeBlocks(level, cand);
+		placeBlocksUpTo(level, cand, cand.placedCount());
 
 		Messages.send(player, "confirm.created", cand.name(), cand.id());
 		if (!complete) Messages.send(player, "gate.incomplete", cand.name(), cand.placedCount(), cand.totalCount());
@@ -471,21 +508,16 @@ public final class GateService {
 		boolean complete = cand.placedCount() == cand.totalCount();
 		GateStatus before = gate.status();
 		cand.setStatus(complete ? GateStatus.OK : before == GateStatus.BROKEN ? GateStatus.BROKEN : GateStatus.INCOMPLETE);
-		boolean rebuild = complete && (blockChanged || boxChanged || before != GateStatus.OK);
-		if (!complete) {
-			forceOpen(level, gate);
-			cand.setOpen(true);
-		} else if (rebuild) {
-			cand.setOpen(false);
-		} else {
-			cand.setOpen(gate.isOpen());
-		}
+		// A new box or block is built closed, and so is an open gate that isn't complete (e.g. its
+		// trigger was missing): its paid part becomes visible. Otherwise the gate stays as it was.
+		boolean rebuild = blockChanged || boxChanged || (!complete && gate.isOpen());
+		cand.setOpen(rebuild ? false : gate.isOpen());
 
 		manager.update(gate, cand);
 		manager.refreshActive(level, gate);
 		blockedNotified.remove(gate.id());
 		clearMarkers(level, gate);
-		if (rebuild) placeBlocks(level, gate);
+		if (rebuild) placeBlocksUpTo(level, gate, gate.placedCount());
 		save(gate);
 
 		Messages.send(player, "confirm.updated", gate.name(), gate.id());
@@ -522,13 +554,32 @@ public final class GateService {
 			return;
 		}
 		Block block = manager.blockOf(gate);
-		Materials.Investment inv = Materials.invest(player, block, gate.missingCount());
+		ServerLevel level = level(gate);
+		if (level == null || !GateGeometry.allChunksLoaded(level, gate)) {
+			Messages.send(player, "confirm.not_loaded");
+			return;
+		}
+		// An open gate (trigger missing) has no blocks in the world: only the count is topped up.
+		// A closed gate gets its holes filled for real, bottom row first.
+		List<BlockPos> holes = new ArrayList<>();
+		if (!gate.isOpen()) {
+			for (BlockPos pos : GateGeometry.positions(gate)) if (level.getBlockState(pos).isAir()) holes.add(pos);
+		}
+		int wanted = gate.isOpen() ? gate.missingCount() : Math.min(gate.missingCount(), holes.size());
+		if (wanted == 0) {
+			Messages.send(player, "repair.obstructed", gate.name());
+			return;
+		}
+		Materials.Investment inv = Materials.invest(player, block, wanted);
 		if (inv.placed() == 0) {
 			Messages.send(player, "repair.no_blocks", gate.name(), gate.placedCount(), gate.totalCount(),
 					block.getName().getString());
 			return;
 		}
+		BlockState state = block.defaultBlockState();
+		for (int i = 0; i < inv.placed() && i < holes.size(); i++) level.setBlock(holes.get(i), state, Block.UPDATE_ALL);
 		gate.invest(inv.placed(), inv.paid());
+		lastVerify.put(gate.id(), level.getGameTime());
 		if (gate.missingCount() == 0 && gate.status() == GateStatus.NO_TRIGGER) {
 			Messages.send(player, "repair.need_trigger", gate.name());
 		} else if (gate.missingCount() == 0) {
@@ -537,6 +588,9 @@ public final class GateService {
 			Messages.send(player, "repair.done", gate.name(), gate.placedCount(), gate.totalCount());
 		} else {
 			Messages.send(player, "repair.partial", gate.name(), gate.placedCount(), gate.totalCount());
+			if (!gate.isOpen() && wanted < gate.missingCount() && inv.placed() == wanted) {
+				Messages.send(player, "repair.obstructed", gate.name());
+			}
 		}
 		save(gate);
 	}

@@ -115,8 +115,8 @@ trigger:
 gate:
   not_found: "&cNo gate found for '{0}'."
   ambiguous: "&eSeveral gates are called '{0}': {1}. Use the id or group:name."
-  incomplete: "&eGate {0}: {1} / {2} blocks. &7It stays open until finished: /gp repair {0}"
-  broken: "&cGate {0} is broken: {1} / {2} blocks – /gp repair {0}"
+  incomplete: "&eGate {0}: {1} / {2} blocks. &7It only works once it is complete: /gp repair {0}"
+  broken: "&cGate {0} is broken and no longer works: {1} / {2} blocks – /gp repair {0}"
   no_trigger: "&cThe trigger block of gate {0} was destroyed; the gate is open. Put a block back or choose a new one with /gp edit {0}."
   blocked: "&eGate {0} can't close: something is in the opening."
   trigger_restored: "&aThe trigger block of gate {0} is back; the gate works again."
@@ -146,6 +146,7 @@ repair:
   need_trigger: "&eGate {0} has all its blocks but is missing a trigger block: /gp edit {0}"
   no_blocks: "&cYou don't carry any {3}. Gate {0}: {1} / {2} blocks."
   partial: "&eGate {0}: {1} / {2} blocks. Some are still missing."
+  obstructed: "&cSomething is in a hole of gate {0}; remove it to continue repairing."
   done: "&aGate {0} repaired: {1} / {2} blocks."
 
 chest:
