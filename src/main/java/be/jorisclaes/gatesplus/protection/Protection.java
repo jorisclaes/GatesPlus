@@ -97,6 +97,16 @@ public final class Protection {
 		return false;
 	}
 
+	/** True when a block of a closed, fireproof gate touches {@code pos} (6 directions). */
+	public static boolean nextToFireproofGate(net.minecraft.world.level.LevelReader reader, BlockPos pos) {
+		if (!(reader instanceof ServerLevel level)) return false;
+		for (net.minecraft.core.Direction d : net.minecraft.core.Direction.values()) {
+			Gate g = gateBlock(level, pos.relative(d));
+			if (g != null && g.fireproof()) return true;
+		}
+		return false;
+	}
+
 	/** Pistons must not move indestructible gate blocks. */
 	public static boolean preventPush(Level level, BlockPos pos) {
 		Gate g = gateBlock(level, pos);
