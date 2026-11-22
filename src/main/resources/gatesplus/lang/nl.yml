@@ -14,7 +14,7 @@ help: |-
   &e/gp confirm <naam> &7– bouw de poort
   &e/gp cancel &7– stop de sessie
   &e/gp edit <id|naam> &7– pas een poort aan
-  &e/gp list &7– jouw poorten  &e/gp info <id|naam> &7– details
+  &e/gp list &7– jouw poorten  &e/gp list all &7– alle poorten (admin)  &e/gp info <id|naam> &7– details
   &e/gp repair [id|naam] &7– herstel met blokken uit je inventory (zonder naam: de poort die je bewerkt)
   &e/gp rm <id|naam> &7– verwijder een poort
   &e/gp group create|delete|add|remove|list|members|gates|info &7– groepen
@@ -128,6 +128,9 @@ protect:
 list:
   empty: "&7Je hebt (nog) geen poorten. Start met /gp create."
   header: "&6Poorten ({0}) &7– eigen: {1}/{2}"
+  header_all: "&6Alle poorten op de server ({0})"
+  owner: "&8   eigenaar: {0}"
+  others_exist: "&7Er bestaan wel {0} poort(en) van andere spelers; als admin zie je ze met &e/gp list all&7."
   line: "&7#{0} &f{1} &7[{2}] &7@ {3} &7{4} &7– {5}, {6}"
   personal: "persoonlijk"
   blocks: "&6Toegestane blokken ({0}): &f{1}"

@@ -83,7 +83,8 @@ public final class GpCommand {
 						.then(literal("markerblock").executes(GpCommand::getMarkers)))
 				.then(literal("list")
 						.executes(GpCommand::list)
-						.then(literal("blocks").executes(GpCommand::listBlocks)))
+						.then(literal("blocks").executes(GpCommand::listBlocks))
+						.then(literal("all").requires(Perms.ADMIN_EDIT.require()).executes(GpCommand::listAll)))
 				.then(literal("info").then(argument("gate", StringArgumentType.word()).suggests(VISIBLE_GATES)
 						.executes(GpCommand::info)))
 				.then(literal("rm").requires(Perms.REMOVE.require())
@@ -337,12 +338,28 @@ public final class GpCommand {
 		visible.sort(Comparator.comparingInt(Gate::id));
 		if (visible.isEmpty()) {
 			Messages.send(p, "list.empty");
+			if (Perms.ADMIN_EDIT.check(p) && gates().manager().count() > 0) {
+				Messages.send(p, "list.others_exist", gates().manager().count());
+			}
 			return 1;
 		}
 		Messages.send(p, "list.header", visible.size(), gates().manager().ownedBy(p.getUUID()).size(),
 				GatesPlus.get().config().limits().maxGatesPerPlayer());
 		for (Gate g : visible) sendGateLine(p, g);
 		return visible.size();
+	}
+
+	/** Admins: every gate on the server, with its owner. */
+	private static int listAll(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
+		ServerPlayer p = player(c);
+		List<Gate> all = new ArrayList<>(gates().manager().all());
+		all.sort(Comparator.comparingInt(Gate::id));
+		Messages.send(p, "list.header_all", all.size());
+		for (Gate g : all) {
+			sendGateLine(p, g);
+			Messages.send(p, "list.owner", g.ownerName());
+		}
+		return all.size();
 	}
 
 	static void sendGateLine(ServerPlayer p, Gate g) {

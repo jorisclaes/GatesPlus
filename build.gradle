@@ -14,6 +14,9 @@ loom {
 		// Explicit heap limit for runClient / runServer (otherwise Java takes 1/4 of the RAM).
 		client {
 			vmArgs "-Xmx5G"
+			// Fixed dev username: otherwise every launch is a new random "PlayerNNN" with another
+			// UUID, and gates made in an earlier session belong to someone else.
+			programArgs "--username", "Dev"
 		}
 		server {
 			vmArgs "-Xmx5G"
