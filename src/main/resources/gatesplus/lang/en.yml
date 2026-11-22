@@ -109,8 +109,9 @@ gate:
   ambiguous: "&eSeveral gates are called '{0}': {1}. Use the id or group:name."
   incomplete: "&eGate {0}: {1} / {2} blocks. &7It stays open until finished: /gp repair {0}"
   broken: "&cGate {0} is broken: {1} / {2} blocks – /gp repair {0}"
-  no_trigger: "&cThe trigger block of gate {0} was destroyed; the gate is open. Choose a new one with /gp edit {0}."
+  no_trigger: "&cThe trigger block of gate {0} was destroyed; the gate is open. Put a block back or choose a new one with /gp edit {0}."
   blocked: "&eGate {0} can't close: something is in the opening."
+  trigger_restored: "&aThe trigger block of gate {0} is back; the gate works again."
   wants_to_close: "&eGate {0} wants to close – step out of the opening!"
 
 protect:
@@ -201,7 +202,7 @@ panel:
     ok: "OK"
     incomplete: "INCOMPLETE – /gp repair"
     broken: "BROKEN – /gp repair"
-    no_trigger: "TRIGGER MISSING – /gp edit"
+    no_trigger: "TRIGGER MISSING – put it back"
   label:
     gate: "Gate"
     block: "Block"

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -13,6 +14,7 @@ import be.jorisclaes.gatesplus.GatesPlus;
 import be.jorisclaes.gatesplus.config.GatesPlusConfig;
 import be.jorisclaes.gatesplus.gate.Gate;
 import be.jorisclaes.gatesplus.gate.GateService;
+import be.jorisclaes.gatesplus.gate.GateStatus;
 import be.jorisclaes.gatesplus.util.Messages;
 
 /**
@@ -74,6 +76,10 @@ public final class GateTicker {
 		if (triggerState.isAir()) {
 			service.markNoTrigger(level, gate);
 			return;
+		}
+		if (gate.status() == GateStatus.NO_TRIGGER) {
+			// a block is back on the trigger position: the gate works again immediately
+			service.restoreTrigger(gate, BuiltInRegistries.BLOCK.getKey(triggerState.getBlock()).toString());
 		}
 		if (!gate.status().isFunctional()) {
 			if (!gate.isOpen()) service.forceOpen(level, gate);

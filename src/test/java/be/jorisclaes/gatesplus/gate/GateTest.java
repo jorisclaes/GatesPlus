@@ -29,4 +29,18 @@ class GateTest {
 		assertEquals(4, g.placedCount());
 		assertEquals(4, g.paidCount());
 	}
+
+	@Test
+	void animationRowsDoNotOverlap() {
+		Gate g = new Gate(1, UUID.randomUUID(), "a", "g", 0);
+		g.setBox(0, 0, 0, 2, 3, 0); // 3 wide, 4 high
+		g.setAnimationTicks(20);
+		g.setDirection(GateDirection.VERTICAL);
+		assertEquals(5, be.jorisclaes.gatesplus.animation.GateAnimator.rowTicks(g)); // 4 rows x 5 ticks
+		g.setDirection(GateDirection.HORIZONTAL);
+		assertEquals(7, be.jorisclaes.gatesplus.animation.GateAnimator.rowTicks(g)); // 3 columns
+		g.setBox(0, 0, 0, 0, 15, 0); // 16 rows: never faster than 2 ticks per row
+		g.setDirection(GateDirection.VERTICAL);
+		assertEquals(2, be.jorisclaes.gatesplus.animation.GateAnimator.rowTicks(g));
+	}
 }

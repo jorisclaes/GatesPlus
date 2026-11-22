@@ -2,9 +2,12 @@ package be.jorisclaes.gatesplus.animation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -14,6 +17,7 @@ import com.mojang.math.Transformation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Display;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.level.block.state.BlockState;
@@ -25,52 +29,61 @@ import be.jorisclaes.gatesplus.mixin.BlockDisplayAccessor;
 import be.jorisclaes.gatesplus.mixin.DisplayAccessor;
 
 /**
- * Smooth gate animation with vanilla block-display entities. The client interpolates the
- * transformation, so the movement is smooth even though the server only sends two states.
+ * Smooth gate animation with vanilla block-display entities, strictly row by row.
  *
- * Opening: real blocks become air, a display per block shrinks away row by row
- * (vertical: bottom row first, retracting upwards; horizontal: left column first, retracting right).
- * Closing is the reverse; the real blocks are placed when the animation ends.
+ * The server starts each row on its own tick (the client interpolates the movement of that row),
+ * and a row only starts when the previous one is done:
+ * - opening: real blocks become air, then row after row shrinks away
+ *   (vertical: bottom row first, retracting upwards; horizontal: left column first, retracting right);
+ * - closing: the reverse order; each row becomes real blocks again as soon as its animation ends.
  */
 public final class GateAnimator {
 	public static final String DISPLAY_TAG = "gatesplus_anim";
+
+	/** Places the real blocks of one finished closing row. */
+	public interface RowPlacer {
+		void placeRow(ServerLevel level, Gate gate, List<BlockPos> positions);
+	}
+
+	private static final class Row {
+		final List<Display.BlockDisplay> displays = new ArrayList<>();
+		final List<BlockPos> positions = new ArrayList<>();
+	}
 
 	private static final class Animation {
 		final Gate gate;
 		final ServerLevel level;
 		final boolean opening;
-		final List<Display.BlockDisplay> displays = new ArrayList<>();
-		final List<Integer> delays = new ArrayList<>();
-		final long startTick;
-		final long endTick;
-		final int rowDuration;
-		boolean transformsApplied;
+		/** Rows in animation order. */
+		final List<Row> rows = new ArrayList<>();
+		final long firstRowTick;
+		final int rowTicks;
+		int nextToStart;
+		int nextToFinish;
 
-		Animation(Gate gate, ServerLevel level, boolean opening, long startTick, int total, int rowDuration) {
+		Animation(Gate gate, ServerLevel level, boolean opening, long firstRowTick, int rowTicks) {
 			this.gate = gate;
 			this.level = level;
 			this.opening = opening;
-			this.startTick = startTick;
-			this.endTick = startTick + 1 + total;
-			this.rowDuration = rowDuration;
+			this.firstRowTick = firstRowTick;
+			this.rowTicks = rowTicks;
 		}
-	}
 
-	/** Called when a closing animation ends and the real blocks should be placed. */
-	public interface CloseFinisher {
-		void finishClose(ServerLevel level, Gate gate);
+		long rowStart(int i) {
+			return firstRowTick + (long) i * rowTicks;
+		}
 	}
 
 	private final Map<Integer, Animation> running = new HashMap<>();
 	/** Displays spawned by running animations; any other tagged display is a leftover and removed. */
-	private final java.util.Set<java.util.UUID> ownDisplays = new java.util.HashSet<>();
-	private final CloseFinisher finisher;
+	private final Set<UUID> ownDisplays = new HashSet<>();
+	private final RowPlacer placer;
 
-	public GateAnimator(CloseFinisher finisher) {
-		this.finisher = finisher;
+	public GateAnimator(RowPlacer placer) {
+		this.placer = placer;
 	}
 
-	public boolean isOwnDisplay(net.minecraft.world.entity.Entity entity) {
+	public boolean isOwnDisplay(Entity entity) {
 		return ownDisplays.contains(entity.getUUID());
 	}
 
@@ -84,8 +97,14 @@ public final class GateAnimator {
 
 	public int displayCount() {
 		int n = 0;
-		for (Animation a : running.values()) n += a.displays.size();
+		for (Animation a : running.values()) for (Row r : a.rows) n += r.displays.size();
 		return n;
+	}
+
+	/** Ticks each row takes: the gate's animation time spread over its rows (min. 2). */
+	public static int rowTicks(Gate gate) {
+		int rows = GateGeometry.rowCount(gate);
+		return Math.max(2, Math.round((float) Math.max(2, gate.animationTicks()) / rows));
 	}
 
 	/**
@@ -94,11 +113,12 @@ public final class GateAnimator {
 	 */
 	public void start(ServerLevel level, Gate gate, BlockState state, boolean opening, long now) {
 		cancel(gate);
-		int rows = GateGeometry.rowCount(gate);
-		int total = Math.max(2, gate.animationTicks());
-		int rowDuration = Math.max(2, Math.min(total, Math.round(total * 0.5f)));
-		Animation anim = new Animation(gate, level, opening, now, total, rowDuration);
+		int rowCount = GateGeometry.rowCount(gate);
+		// first row starts one tick after spawning, so clients have the start state first
+		Animation anim = new Animation(gate, level, opening, now + 1, rowTicks(gate));
+		for (int i = 0; i < rowCount; i++) anim.rows.add(new Row());
 
+		Transformation startState = opening ? full() : collapsed(gate);
 		for (BlockPos pos : GateGeometry.positions(gate)) {
 			Display.BlockDisplay display = EntityTypes.BLOCK_DISPLAY.create(level, EntitySpawnReason.TRIGGERED);
 			if (display == null) continue;
@@ -106,16 +126,15 @@ public final class GateAnimator {
 			display.addTag(DISPLAY_TAG);
 			((BlockDisplayAccessor) display).gatesplus$setBlockState(state);
 			((DisplayAccessor) display).gatesplus$setViewRange(1.5f);
-			((DisplayAccessor) display).gatesplus$setTransformation(opening ? full() : collapsed(gate.direction(), gate));
+			((DisplayAccessor) display).gatesplus$setTransformation(startState);
 			ownDisplays.add(display.getUUID());
 			level.addFreshEntity(display);
 
 			int row = GateGeometry.row(gate, pos);
 			// opening: first row first; closing: last row first (reverse order)
-			int order = opening ? row : rows - 1 - row;
-			int delay = rows <= 1 ? 0 : Math.round((float) order * (total - rowDuration) / (rows - 1));
-			anim.displays.add(display);
-			anim.delays.add(delay);
+			Row r = anim.rows.get(opening ? row : rowCount - 1 - row);
+			r.displays.add(display);
+			r.positions.add(pos);
 		}
 		running.put(gate.id(), anim);
 	}
@@ -124,40 +143,46 @@ public final class GateAnimator {
 		Iterator<Animation> it = running.values().iterator();
 		while (it.hasNext()) {
 			Animation a = it.next();
-			if (!a.transformsApplied && now > a.startTick) {
-				// One tick after spawning, so clients have the start state before interpolating.
-				Transformation target = a.opening ? collapsed(a.gate.direction(), a.gate) : full();
-				for (int i = 0; i < a.displays.size(); i++) {
-					DisplayAccessor d = (DisplayAccessor) a.displays.get(i);
-					d.gatesplus$setInterpolationDelay(a.delays.get(i));
-					d.gatesplus$setInterpolationDuration(a.rowDuration);
-					d.gatesplus$setTransformation(target);
-				}
-				a.transformsApplied = true;
+			while (a.nextToStart < a.rows.size() && now >= a.rowStart(a.nextToStart)) {
+				startRow(a, a.rows.get(a.nextToStart));
+				a.nextToStart++;
 			}
-			if (now >= a.endTick) {
-				it.remove();
-				finish(a);
+			while (a.nextToFinish < a.nextToStart && now >= a.rowStart(a.nextToFinish) + a.rowTicks) {
+				finishRow(a, a.rows.get(a.nextToFinish));
+				a.nextToFinish++;
 			}
+			if (a.nextToFinish >= a.rows.size()) it.remove();
 		}
+	}
+
+	private static void startRow(Animation a, Row row) {
+		Transformation target = a.opening ? collapsed(a.gate) : full();
+		for (Display.BlockDisplay display : row.displays) {
+			DisplayAccessor d = (DisplayAccessor) display;
+			d.gatesplus$setInterpolationDelay(0);
+			d.gatesplus$setInterpolationDuration(a.rowTicks);
+			d.gatesplus$setTransformation(target);
+		}
+	}
+
+	private void finishRow(Animation a, Row row) {
+		if (!a.opening) placer.placeRow(a.level, a.gate, row.positions);
+		for (Display.BlockDisplay d : row.displays) {
+			ownDisplays.remove(d.getUUID());
+			d.discard();
+		}
+		row.displays.clear();
 	}
 
 	/** Stops an animation immediately and puts the gate in its final state. */
 	public void cancel(Gate gate) {
 		Animation a = running.remove(gate.id());
-		if (a != null) finish(a);
+		if (a == null) return;
+		for (int i = a.nextToFinish; i < a.rows.size(); i++) finishRow(a, a.rows.get(i));
 	}
 
 	public void cancelAll() {
 		for (Animation a : new ArrayList<>(running.values())) cancel(a.gate);
-	}
-
-	private void finish(Animation a) {
-		if (!a.opening) finisher.finishClose(a.level, a.gate);
-		for (Display.BlockDisplay d : a.displays) {
-			ownDisplays.remove(d.getUUID());
-			d.discard();
-		}
 	}
 
 	private static Transformation full() {
@@ -165,12 +190,11 @@ public final class GateAnimator {
 	}
 
 	/** A block squashed to zero thickness against its far side (top, or the "right" side). */
-	private static Transformation collapsed(GateDirection dir, Gate gate) {
-		if (dir == GateDirection.VERTICAL) {
+	private static Transformation collapsed(Gate gate) {
+		if (gate.direction() == GateDirection.VERTICAL) {
 			return new Transformation(new Vector3f(0, 1, 0), new Quaternionf(), new Vector3f(1, 0, 1), new Quaternionf());
 		}
-		boolean alongX = GateGeometry.alongX(gate);
-		return alongX
+		return GateGeometry.alongX(gate)
 				? new Transformation(new Vector3f(1, 0, 0), new Quaternionf(), new Vector3f(0, 1, 1), new Quaternionf())
 				: new Transformation(new Vector3f(0, 0, 1), new Quaternionf(), new Vector3f(1, 1, 0), new Quaternionf());
 	}

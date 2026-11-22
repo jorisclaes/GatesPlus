@@ -50,7 +50,7 @@ public final class GateService {
 	private final GateManager manager = new GateManager();
 	private final GroupManager groups = new GroupManager();
 	private final ReturnChestTracker returnChests = new ReturnChestTracker();
-	private final GateAnimator animator = new GateAnimator(this::finishClose);
+	private final GateAnimator animator = new GateAnimator(this::placeRow);
 	private final SessionManager sessions = new SessionManager(this);
 	/** Gates currently open in an edit session; they ignore redstone. */
 	private final Set<Integer> locked = new HashSet<>();
@@ -191,9 +191,12 @@ public final class GateService {
 		save(gate);
 	}
 
-	private void finishClose(ServerLevel level, Gate gate) {
-		if (!gate.isOpen() && gate.status() == GateStatus.OK && manager.byId(gate.id()) == gate) {
-			placeBlocks(level, gate);
+	/** A closing row finished animating: its real blocks appear (only on air, never replacing anything). */
+	private void placeRow(ServerLevel level, Gate gate, List<BlockPos> positions) {
+		if (gate.isOpen() || gate.status() != GateStatus.OK || manager.byId(gate.id()) != gate) return;
+		BlockState state = stateOf(gate);
+		for (BlockPos pos : positions) {
+			if (level.getBlockState(pos).isAir()) level.setBlock(pos, state, Block.UPDATE_ALL);
 		}
 	}
 
@@ -220,6 +223,20 @@ public final class GateService {
 		forceOpen(level, gate);
 		save(gate);
 		notifyGate(gate, "gate.no_trigger", gate.name());
+	}
+
+	/**
+	 * A block was placed back on the trigger position: the gate works again right away. It gets the
+	 * status it would have without the trigger problem (OK, or INCOMPLETE when blocks are missing);
+	 * the ticker then closes it when the trigger is unpowered.
+	 */
+	public void restoreTrigger(Gate gate, String triggerBlock) {
+		if (gate.status() != GateStatus.NO_TRIGGER) return;
+		gate.setTrigger(gate.triggerX(), gate.triggerY(), gate.triggerZ(), triggerBlock);
+		gate.setStatus(gate.missingCount() == 0 ? GateStatus.OK : GateStatus.INCOMPLETE);
+		blockedNotified.remove(gate.id());
+		save(gate);
+		notifyGate(gate, "gate.trigger_restored", gate.name());
 	}
 
 	/**
