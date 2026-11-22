@@ -40,7 +40,8 @@ public final class Protection {
 			boolean adminBreak = sp.isCreative() && GatesPlus.get().config().protection().allowOpBreak()
 					&& Perms.ADMIN_BREAK.check(sp);
 			if (adminBreak) return true;
-			Messages.actionBar(sp, "protect.indestructible", gate.name());
+			// only shown to players with the dev panel on (/gp devstats), otherwise breaking just fails
+			if (GatesPlus.get().devStats().isOn(sp)) Messages.actionBar(sp, "protect.indestructible", gate.name());
 			return false;
 		});
 

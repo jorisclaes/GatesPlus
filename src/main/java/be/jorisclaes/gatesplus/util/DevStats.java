@@ -33,6 +33,11 @@ public final class DevStats {
 		return true;
 	}
 
+	/** "Dev mode": the player turned the dev panel on with /gp devstats. */
+	public boolean isOn(ServerPlayer player) {
+		return viewers.contains(player.getUUID());
+	}
+
 	public void remove(UUID player) {
 		viewers.remove(player);
 	}
