@@ -9,13 +9,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import be.jorisclaes.gatesplus.wand.Wand;
 
-/** The wand can't be dropped with Q / Ctrl+Q. */
+/** The wand and marker blocks can't be dropped with Q / Ctrl+Q. */
 @Mixin(ServerPlayer.class)
 public abstract class ServerPlayerMixin {
 	@Inject(method = "drop(Z)V", at = @At("HEAD"), cancellable = true)
 	private void gatesplus$keepWand(boolean all, CallbackInfo ci) {
 		ServerPlayer self = (ServerPlayer) (Object) this;
-		if (Wand.isWand(self.getInventory().getSelectedItem())) {
+		if (Wand.isSessionTool(self.getInventory().getSelectedItem())) {
 			ci.cancel();
 			self.containerMenu.sendAllDataToRemote();
 		}

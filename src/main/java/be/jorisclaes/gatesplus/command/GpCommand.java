@@ -372,6 +372,11 @@ public final class GpCommand {
 	/** Gives one top-left (corner 1) and one bottom-right (corner 2) marker block. */
 	private static int getMarkers(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
 		ServerPlayer p = player(c);
+		// marker blocks are a selection tool: only while creating or editing a gate
+		if (gates().sessions().get(p) == null) {
+			Messages.send(p, "get.marker.no_session");
+			return 0;
+		}
 		for (var item : new net.minecraft.world.item.Item[] {MarkerBlocks.TOP_LEFT_ITEM, MarkerBlocks.BOTTOM_RIGHT_ITEM}) {
 			ItemStack stack = new ItemStack(item);
 			if (!p.getInventory().add(stack) || !stack.isEmpty()) ReturnChestTracker.drop(p.level(), p, stack);

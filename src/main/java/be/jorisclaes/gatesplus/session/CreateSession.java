@@ -64,6 +64,19 @@ public final class CreateSession {
 
 	private long lastClickMillis;
 
+	/** A marker block placed during this session, removed again when the session ends. */
+	public record PlacedMarker(net.minecraft.server.level.ServerLevel level, BlockPos pos) {}
+
+	private final java.util.List<PlacedMarker> placedMarkers = new java.util.ArrayList<>();
+
+	public void addPlacedMarker(net.minecraft.server.level.ServerLevel level, BlockPos pos) {
+		placedMarkers.add(new PlacedMarker(level, pos));
+	}
+
+	public java.util.List<PlacedMarker> placedMarkers() {
+		return placedMarkers;
+	}
+
 	/**
 	 * Creative clients repeat attack packets while the button is held; ignore clicks that follow
 	 * each other within 200 ms so one click sets one point.

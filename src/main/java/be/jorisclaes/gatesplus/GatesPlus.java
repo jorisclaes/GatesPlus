@@ -83,8 +83,11 @@ public class GatesPlus implements ModInitializer {
 		ServerTickEvents.END_SERVER_TICK.register(this::onTick);
 
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, srv) -> {
-			// sessions don't survive a restart or relog, so neither does the wand
-			if (gates.sessions().get(handler.player) == null) Wand.removeAll(handler.player);
+			// sessions don't survive a restart or relog, so neither do the wand and marker blocks
+			if (gates.sessions().get(handler.player) == null) {
+				Wand.removeAll(handler.player);
+				MarkerBlocks.removeItems(handler.player);
+			}
 		});
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, srv) -> {
 			gates.sessions().onDisconnect(handler.player);

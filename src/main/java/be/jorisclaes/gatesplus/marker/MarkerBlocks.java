@@ -31,7 +31,7 @@ public final class MarkerBlocks {
 
 	private static Block block(String name, MapColor color) {
 		ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, GatesPlus.id(name));
-		return Registry.register(BuiltInRegistries.BLOCK, key, new Block(BlockBehaviour.Properties.of()
+		return Registry.register(BuiltInRegistries.BLOCK, key, new MarkerBlock(BlockBehaviour.Properties.of()
 				.setId(key)
 				.mapColor(color)
 				.lightLevel(state -> 10)
@@ -48,6 +48,22 @@ public final class MarkerBlocks {
 
 	/** Forces class loading (and thus registration) during mod init. */
 	public static void register() {}
+
+	public static boolean isMarkerItem(net.minecraft.world.item.ItemStack stack) {
+		return stack != null && (stack.getItem() == TOP_LEFT_ITEM || stack.getItem() == BOTTOM_RIGHT_ITEM);
+	}
+
+	/** Removes every marker item from the inventory and the cursor (end of a session). */
+	public static void removeItems(net.minecraft.server.level.ServerPlayer player) {
+		var inv = player.getInventory();
+		for (int i = 0; i < inv.getContainerSize(); i++) {
+			if (isMarkerItem(inv.getItem(i))) inv.setItem(i, net.minecraft.world.item.ItemStack.EMPTY);
+		}
+		if (isMarkerItem(player.containerMenu.getCarried())) {
+			player.containerMenu.setCarried(net.minecraft.world.item.ItemStack.EMPTY);
+		}
+		player.containerMenu.broadcastChanges();
+	}
 
 	public static boolean isMarker(BlockState state) {
 		return state.is(TOP_LEFT) || state.is(BOTTOM_RIGHT);

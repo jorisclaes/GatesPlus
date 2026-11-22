@@ -39,7 +39,7 @@ public final class WandEvents {
 
 		// item frames, armor stands, allays, ...: the wand can't be handed to an entity
 		UseEntityCallback.EVENT.register((player, level, hand, entity, hit) ->
-				Wand.isWand(player.getItemInHand(hand)) ? InteractionResult.FAIL : InteractionResult.PASS);
+				Wand.isSessionTool(player.getItemInHand(hand)) ? InteractionResult.FAIL : InteractionResult.PASS);
 
 		// remove the wand before death drops are made
 		ServerLivingEntityEvents.ALLOW_DEATH.register((entity, source, amount) -> {

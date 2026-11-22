@@ -108,8 +108,31 @@ public final class SessionManager {
 		if (s == null) return;
 		if (s.type() == CreateSession.Type.EDIT) service.unlock(s.gateId());
 		Wand.removeAll(player);
+		removeMarkerBlocks(player, s);
 		clearMarkers(player);
 		if (notify) Messages.send(player, "session.cancelled");
+	}
+
+	/**
+	 * Marker blocks only exist during a session: unused ones leave the inventory, placed ones the world
+	 * (markers that ended up inside a gate were already replaced by it).
+	 */
+	private static void removeMarkerBlocks(ServerPlayer player, CreateSession s) {
+		MarkerBlocks.removeItems(player);
+		for (CreateSession.PlacedMarker m : s.placedMarkers()) {
+			if (m.level().isLoaded(m.pos()) && MarkerBlocks.isMarker(m.level().getBlockState(m.pos()))) {
+				m.level().removeBlock(m.pos(), false);
+			}
+		}
+	}
+
+	/** @return false when the player has no session (the marker is then removed again) */
+	public boolean onMarkerPlaced(ServerPlayer player, ServerLevel level, BlockPos pos) {
+		CreateSession s = get(player);
+		if (s == null) return false;
+		s.addPlacedMarker(level, pos);
+		s.touch();
+		return true;
 	}
 
 	/** Player left: drop the session without touching the (offline) inventory twice. */
@@ -120,6 +143,7 @@ public final class SessionManager {
 		if (s == null) return;
 		if (s.type() == CreateSession.Type.EDIT) service.unlock(s.gateId());
 		Wand.removeAll(player);
+		removeMarkerBlocks(player, s);
 	}
 
 	public void cancelEditsOf(Gate gate) {

@@ -33,6 +33,11 @@ public final class Wand {
 		return data != null && data.copyTag().getBooleanOr(TAG, false);
 	}
 
+	/** Items that only exist during a session and may not leave the player's inventory. */
+	public static boolean isSessionTool(ItemStack stack) {
+		return isWand(stack) || be.jorisclaes.gatesplus.marker.MarkerBlocks.isMarkerItem(stack);
+	}
+
 	public static boolean has(ServerPlayer player) {
 		Inventory inv = player.getInventory();
 		for (int i = 0; i < inv.getContainerSize(); i++) if (isWand(inv.getItem(i))) return true;
