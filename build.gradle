@@ -10,6 +10,16 @@ repositories {
 loom {
 	splitEnvironmentSourceSets()
 
+	runs {
+		// Explicit heap limit for runClient / runServer (otherwise Java takes 1/4 of the RAM).
+		client {
+			vmArgs "-Xmx10G"
+		}
+		server {
+			vmArgs "-Xmx10G"
+		}
+	}
+
 	mods {
 		"gatesplus" {
 			sourceSet sourceSets.main
