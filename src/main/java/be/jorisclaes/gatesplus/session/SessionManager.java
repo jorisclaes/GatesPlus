@@ -26,6 +26,7 @@ import be.jorisclaes.gatesplus.gate.GateDirection;
 import be.jorisclaes.gatesplus.gate.GateManager;
 import be.jorisclaes.gatesplus.gate.GateService;
 import be.jorisclaes.gatesplus.gate.InfoPanel;
+import be.jorisclaes.gatesplus.marker.MarkerBlocks;
 import be.jorisclaes.gatesplus.network.Network;
 import be.jorisclaes.gatesplus.network.PanelPayload;
 import be.jorisclaes.gatesplus.network.SelectionSyncPayload;
@@ -193,13 +194,16 @@ public final class SessionManager {
 			return;
 		}
 
-		// corners select the air block in front of the clicked face (gates are built in air)
-		BlockPos pos = clicked.relative(face);
+		// A marker block selects itself; any other block selects the air in front of the clicked
+		// face (gates are only built in air, markers are replaced by the gate).
+		boolean marker = MarkerBlocks.isMarker(level.getBlockState(clicked));
+		BlockPos pos = marker ? clicked : clicked.relative(face);
+		String suffix = marker ? Messages.raw(player, "wand.on_marker") : "";
 		CreateSession.SetResult r = s.clickCorner(pos);
 		switch (r) {
-			case CORNER1 -> Messages.actionBar(player, "wand.corner1", pos.getX(), pos.getY(), pos.getZ());
+			case CORNER1 -> Messages.actionBar(player, "wand.corner1", pos.getX(), pos.getY(), pos.getZ(), suffix);
 			case CORNER2, CORNER2_REPLACED -> Messages.actionBar(player, "wand.corner2", pos.getX(), pos.getY(), pos.getZ(),
-					s.sizeX(), s.sizeY(), s.sizeZ(), s.volume());
+					s.sizeX(), s.sizeY(), s.sizeZ(), s.volume(), suffix);
 			default -> { }
 		}
 		if (r == CreateSession.SetResult.CORNER2) Messages.send(player, "wand.hint_trigger");

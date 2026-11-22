@@ -15,6 +15,7 @@ public enum Perms {
 	USE("gatesplus.use", 0),
 	REMOVE("gatesplus.remove", 0),
 	GROUP("gatesplus.group", 0),
+	GET_MARKER("gatesplus.get.marker", 0),
 	SET_INVERTED("gatesplus.set.inverted", 0),
 	SET_ANIMATION("gatesplus.set.animation", 0),
 	BYPASS_LIMITS("gatesplus.bypass.limits", 2),

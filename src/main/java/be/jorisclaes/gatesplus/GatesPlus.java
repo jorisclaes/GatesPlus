@@ -25,6 +25,7 @@ import be.jorisclaes.gatesplus.command.GpCommand;
 import be.jorisclaes.gatesplus.config.ConfigLoader;
 import be.jorisclaes.gatesplus.gate.BlockFilter;
 import be.jorisclaes.gatesplus.gate.GateService;
+import be.jorisclaes.gatesplus.marker.MarkerBlocks;
 import be.jorisclaes.gatesplus.network.Network;
 import be.jorisclaes.gatesplus.protection.Protection;
 import be.jorisclaes.gatesplus.redstone.GateTicker;
@@ -58,6 +59,7 @@ public class GatesPlus implements ModInitializer {
 		configDir = FabricLoader.getInstance().getConfigDir().resolve(MOD_ID);
 		reloadConfig();
 		Messages.load(configDir);
+		MarkerBlocks.register();
 		Network.register();
 		Protection.register();
 		WandEvents.register();

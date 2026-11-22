@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -21,6 +22,7 @@ import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 
 import be.jorisclaes.gatesplus.GatesPlus;
 import be.jorisclaes.gatesplus.gate.BlockFilter;
@@ -28,6 +30,8 @@ import be.jorisclaes.gatesplus.gate.Gate;
 import be.jorisclaes.gatesplus.gate.GateDirection;
 import be.jorisclaes.gatesplus.gate.GateService;
 import be.jorisclaes.gatesplus.gate.InfoPanel;
+import be.jorisclaes.gatesplus.gate.ReturnChestTracker;
+import be.jorisclaes.gatesplus.marker.MarkerBlocks;
 import be.jorisclaes.gatesplus.group.Group;
 import be.jorisclaes.gatesplus.network.Network;
 import be.jorisclaes.gatesplus.session.CreateSession;
@@ -70,6 +74,11 @@ public final class GpCommand {
 								.then(literal("inverted").executes(c -> setRedstone(c, true))))
 						.then(literal("group").then(argument("group", StringArgumentType.word()).suggests(MY_GROUPS_OR_NONE)
 								.executes(GpCommand::setGroup))))
+				.then(literal("get").requires(Perms.GET_MARKER.require())
+						.then(literal("markerblock")
+								.executes(c -> getMarkers(c, 16))
+								.then(argument("amount", IntegerArgumentType.integer(1, 64))
+										.executes(c -> getMarkers(c, IntegerArgumentType.getInteger(c, "amount"))))))
 				.then(literal("list")
 						.executes(GpCommand::list)
 						.then(literal("blocks").executes(GpCommand::listBlocks)))
@@ -307,6 +316,14 @@ public final class GpCommand {
 		Messages.send(p, "list.line", g.id(), g.name(), group == null ? Messages.raw(p, "list.personal") : group,
 				g.minX() + " " + g.minY() + " " + g.minZ(), g.block(),
 				Messages.raw(p, g.isOpen() ? "panel.open" : "panel.closed"), InfoPanel.statusLabel(p, g.status()));
+	}
+
+	private static int getMarkers(CommandContext<CommandSourceStack> c, int amount) throws CommandSyntaxException {
+		ServerPlayer p = player(c);
+		ItemStack stack = new ItemStack(MarkerBlocks.MARKER_ITEM, amount);
+		if (!p.getInventory().add(stack) || !stack.isEmpty()) ReturnChestTracker.drop(p.level(), p, stack);
+		Messages.send(p, "get.marker.done", amount);
+		return amount;
 	}
 
 	private static int listBlocks(CommandContext<CommandSourceStack> c) {

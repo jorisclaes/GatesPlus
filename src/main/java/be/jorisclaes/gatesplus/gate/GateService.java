@@ -33,6 +33,7 @@ import be.jorisclaes.gatesplus.animation.GateAnimator;
 import be.jorisclaes.gatesplus.config.GatesPlusConfig;
 import be.jorisclaes.gatesplus.group.Group;
 import be.jorisclaes.gatesplus.group.GroupManager;
+import be.jorisclaes.gatesplus.marker.MarkerBlocks;
 import be.jorisclaes.gatesplus.session.CreateSession;
 import be.jorisclaes.gatesplus.session.SessionManager;
 import be.jorisclaes.gatesplus.storage.StorageException;
@@ -121,6 +122,14 @@ public final class GateService {
 		BlockState state = stateOf(gate);
 		for (BlockPos pos : GateGeometry.positions(gate)) {
 			if (level.getBlockState(pos).isAir()) level.setBlock(pos, state, Block.UPDATE_ALL);
+		}
+	}
+
+	/** Marker blocks inside the gate box disappear when the gate is built (they are free). */
+	public void clearMarkers(ServerLevel level, Gate gate) {
+		BlockState air = Blocks.AIR.defaultBlockState();
+		for (BlockPos pos : GateGeometry.positions(gate)) {
+			if (MarkerBlocks.isMarker(level.getBlockState(pos))) level.setBlock(pos, air, Block.UPDATE_ALL);
 		}
 	}
 
@@ -380,7 +389,7 @@ public final class GateService {
 			if (otherTrigger != null && otherTrigger != existing) return fail(player, "confirm.overlap_trigger", otherTrigger.name());
 			BlockState st = level.getBlockState(pos);
 			boolean ownBlock = existing != null && existing.contains(pos.getX(), pos.getY(), pos.getZ()) && st.is(oldBlock);
-			if (!st.isAir() && !ownBlock) invalid.add(pos);
+			if (!st.isAir() && !ownBlock && !MarkerBlocks.isMarker(st)) invalid.add(pos);
 		}
 		if (!invalid.isEmpty()) {
 			sessions.showInvalid(player, invalid);
@@ -411,6 +420,7 @@ public final class GateService {
 		cand.setId(id);
 		manager.add(cand);
 		manager.refreshActive(level, cand);
+		clearMarkers(level, cand);
 		if (complete) placeBlocks(level, cand);
 
 		Messages.send(player, "confirm.created", cand.name(), cand.id());
@@ -457,6 +467,7 @@ public final class GateService {
 		manager.update(gate, cand);
 		manager.refreshActive(level, gate);
 		blockedNotified.remove(gate.id());
+		clearMarkers(level, gate);
 		if (rebuild) placeBlocks(level, gate);
 		save(gate);
 
