@@ -4,11 +4,7 @@ plugins {
 }
 
 repositories {
-	// Add repositories to retrieve artifacts from in here.
-	// You should only use this when depending on other mods because
-	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
-	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
-	// for more information about repositories.
+	mavenCentral()
 }
 
 loom {
@@ -29,6 +25,24 @@ dependencies {
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+	// Permissions (LuckPerms compatible)
+	include(implementation("me.lucko:fabric-permissions-api:${project.fabric_permissions_api_version}"))
+
+	// Config + storage libraries, shipped as jar-in-jar
+	include(implementation("org.yaml:snakeyaml:${project.snakeyaml_version}"))
+	include(implementation("org.xerial:sqlite-jdbc:${project.sqlite_jdbc_version}"))
+	include(implementation("com.mysql:mysql-connector-j:${project.mysql_connector_version}") {
+		exclude group: "com.google.protobuf"
+	})
+	include(implementation("com.zaxxer:HikariCP:${project.hikaricp_version}"))
+
+	testImplementation "org.junit.jupiter:junit-jupiter:${project.junit_version}"
+	testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+}
+
+test {
+	useJUnitPlatform()
 }
 
 processResources {

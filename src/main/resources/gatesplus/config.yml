@@ -1,0 +1,100 @@
+# ============================================================
+#  GatesPlus configuratie
+#  Na aanpassen: /gp reload (opslag-instellingen vereisen een herstart)
+# ============================================================
+
+# Taal van de meldingen: nl | en | auto (volgt de taal van de speler)
+language: nl
+
+storage:
+  # sqlite | mysql
+  type: sqlite
+  sqlite:
+    # relatief t.o.v. config/gatesplus/
+    file: gatesplus.db
+  mysql:
+    host: localhost
+    port: 3306
+    database: gatesplus
+    user: root
+    password: ""
+    pool-size: 4
+
+limits:
+  max-gates-per-player: 5
+  max-gate-blocks: 256
+  max-width: 16
+  max-height: 16
+  max-depth: 4
+  # maximale afstand (in blokken) tussen trigger-blok en de poort
+  max-trigger-distance: 5
+  max-groups-per-player: 5
+  max-members-per-group: 20
+  max-concurrent-animations: 50
+
+# Blokken waarvan een poort gemaakt mag worden.
+# Ongeschikte blokken (kisten, fakkels, vloeistoffen, deuren, ...) worden automatisch
+# weggefilterd en gelogd. Vallende blokken (zand, grind) worden vastgezet.
+allowed-blocks:
+  - minecraft:dirt
+  - minecraft:stone
+  - minecraft:cobblestone
+  - minecraft:stone_bricks
+  - minecraft:oak_planks
+  - minecraft:spruce_planks
+  - minecraft:dark_oak_planks
+  - minecraft:oak_log
+  - minecraft:bricks
+  - minecraft:iron_block
+  - minecraft:iron_bars
+  - minecraft:glass
+  - minecraft:sand
+  - minecraft:gravel
+  - minecraft:deepslate_bricks
+  - minecraft:polished_blackstone_bricks
+
+# Hekken, ruiten en tralies zijn geen volle blokken maar wel toegestaan als ze hier staan.
+non-full-block-whitelist:
+  - minecraft:iron_bars
+  - minecraft:glass_pane
+  - minecraft:oak_fence
+  - minecraft:spruce_fence
+  - minecraft:dark_oak_fence
+  - minecraft:nether_brick_fence
+
+session:
+  # sessie stopt automatisch na zoveel minuten zonder activiteit
+  timeout-minutes: 10
+
+# Standaardwaarden voor een nieuwe poort (worden aan de poort zelf gekoppeld)
+defaults:
+  block: minecraft:dirt
+  indestructible: true
+  fireproof: true
+  animation-enabled: true
+  # vertical (van onder naar boven) | horizontal (van links naar rechts)
+  direction: vertical
+  animation-ticks: 20
+
+animation:
+  # false = globaal uit: geen enkele poort animeert en niemand kan het aanzetten
+  enabled: true
+  allow-player-toggle: true
+
+redstone:
+  check-interval-ticks: 4
+  # false = omgekeerde redstone uitgeschakeld voor alle poorten
+  allow-inverted: true
+
+protection:
+  # admins (permissie gatesplus.admin.break) mogen onbreekbare poorten breken in creative
+  allow-op-break: false
+
+materials:
+  # false = bouwen/repareren is gratis
+  require-blocks: true
+  # creative spelers betalen niets (en krijgen ook niets terug)
+  creative-free: true
+  return-on-remove: true
+  # meer items terug dan dit -> ze komen in een kist die verdwijnt als ze leeg is
+  chest-threshold: 60

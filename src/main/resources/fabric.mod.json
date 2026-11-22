@@ -3,13 +3,14 @@
 	"id": "gatesplus",
 	"version": "${version}",
 	"name": "GatesPlus",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"description": "Maak poorten van bijna elk blok die openen en sluiten met redstone.",
 	"authors": [
-		"Me!"
+		"Joris Claes"
 	],
 	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"homepage": "https://github.com/jorisclaes/GatesPlus",
+		"sources": "https://github.com/jorisclaes/GatesPlus",
+		"issues": "https://github.com/jorisclaes/GatesPlus/issues"
 	},
 	"license": "CC0-1.0",
 	"icon": "assets/gatesplus/icon.png",
@@ -33,6 +34,7 @@
 		"fabricloader": ">=0.20.1",
 		"minecraft": "~26.3",
 		"java": ">=25",
-		"fabric-api": "*"
+		"fabric-api": "*",
+		"fabric-permissions-api-v0": "*"
 	}
 }
