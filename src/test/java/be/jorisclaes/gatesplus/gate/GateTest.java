@@ -40,9 +40,8 @@ class GateTest {
 		g.setDirection(GateDirection.HORIZONTAL);
 		assertEquals(7, be.jorisclaes.gatesplus.animation.GateAnimator.rowTicks(g)); // 3 columns
 		g.setDirection(GateDirection.VERTICAL);
-		// closing: 1.5x slower (5 -> 8 ticks per row), next row starts at ~60% (5 ticks)
+		// closing: 1.5x slower (5 -> 8 ticks per row)
 		assertEquals(8, be.jorisclaes.gatesplus.animation.GateAnimator.closingRowDuration(g));
-		assertEquals(5, be.jorisclaes.gatesplus.animation.GateAnimator.closingRowInterval(g));
 		g.setBox(0, 0, 0, 0, 15, 0); // 16 rows: never faster than 2 ticks per row
 		g.setDirection(GateDirection.VERTICAL);
 		assertEquals(2, be.jorisclaes.gatesplus.animation.GateAnimator.rowTicks(g));

@@ -35,8 +35,9 @@ import be.jorisclaes.gatesplus.mixin.DisplayAccessor;
  * and a row only starts when the previous one is done:
  * - opening: real blocks become air, then row after row shrinks away
  *   (vertical: bottom row first, retracting upwards; horizontal: left column first, retracting right);
- * - closing: the reverse order (vertical: top row first, growing down), a bit slower and with the
- *   rows overlapping; each row becomes real blocks as soon as it is done.
+ * - closing: the reverse order (vertical: top row first, growing down), a bit slower;
+ *   each row becomes real blocks as soon as it is done.
+ * In both directions a row only starts when the previous row has finished.
  */
 public final class GateAnimator {
 	public static final String DISPLAY_TAG = "gatesplus_anim";
@@ -128,11 +129,6 @@ public final class GateAnimator {
 		return Math.max(3, Math.round(rowTicks(gate) * 1.5f));
 	}
 
-	/** The next closing row starts when the previous one is about 60% done. */
-	public static int closingRowInterval(Gate gate) {
-		return Math.max(1, Math.round(closingRowDuration(gate) * 0.6f));
-	}
-
 	/**
 	 * Starts an animation. The caller has already removed the real blocks when opening.
 	 * @param state the gate block state to show
@@ -141,11 +137,10 @@ public final class GateAnimator {
 		cancel(gate);
 		int rowCount = GateGeometry.rowCount(gate);
 		// first row starts one tick after spawning, so clients have the start state first
-		// Opening: each row in turn (liked as it is). Closing: a bit slower and the rows overlap, so
-		// the edge of the gate moves down calmly instead of jumping from row to row.
+		// Both ways the next row only starts once the previous row has finished its movement;
+		// closing rows move a bit slower than opening rows.
 		int duration = opening ? rowTicks(gate) : closingRowDuration(gate);
-		int interval = opening ? duration : closingRowInterval(gate);
-		Animation anim = new Animation(gate, level, opening, state, now + 1, duration, interval);
+		Animation anim = new Animation(gate, level, opening, state, now + 1, duration, duration);
 		for (int i = 0; i < rowCount; i++) anim.rows.add(new Row());
 		for (BlockPos pos : GateGeometry.positions(gate)) {
 			int row = GateGeometry.row(gate, pos);
