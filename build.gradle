@@ -13,10 +13,10 @@ loom {
 	runs {
 		// Explicit heap limit for runClient / runServer (otherwise Java takes 1/4 of the RAM).
 		client {
-			vmArgs "-Xmx10G"
+			vmArgs "-Xmx5G"
 		}
 		server {
-			vmArgs "-Xmx10G"
+			vmArgs "-Xmx5G"
 		}
 	}
 
