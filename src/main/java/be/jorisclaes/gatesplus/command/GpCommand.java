@@ -71,6 +71,12 @@ public final class GpCommand {
 						.then(literal("redstone")
 								.then(literal("normal").executes(c -> setRedstone(c, false)))
 								.then(literal("inverted").executes(c -> setRedstone(c, true))))
+						.then(literal("indestructible")
+								.then(literal("on").executes(c -> setIndestructible(c, true)))
+								.then(literal("off").executes(c -> setIndestructible(c, false))))
+						.then(literal("fireproof")
+								.then(literal("on").executes(c -> setFireproof(c, true)))
+								.then(literal("off").executes(c -> setFireproof(c, false))))
 						.then(literal("group").then(argument("group", StringArgumentType.word()).suggests(MY_GROUPS_OR_NONE)
 								.executes(GpCommand::setGroup))))
 				.then(literal("get").requires(Perms.GET_MARKER.require())
@@ -249,6 +255,36 @@ public final class GpCommand {
 		}
 		be.jorisclaes.gatesplus.wand.Wand.give(p);
 		Messages.send(p, "set.trigger.mode", GatesPlus.get().config().limits().maxTriggerDistance());
+		gates().sessions().sync(p);
+		return 1;
+	}
+
+	/** Breakable or not; for an existing gate: /gp edit <gate>, this command, /gp confirm. */
+	private static int setIndestructible(CommandContext<CommandSourceStack> c, boolean on) throws CommandSyntaxException {
+		ServerPlayer p = player(c);
+		CreateSession s = session(p);
+		if (s == null) return 0;
+		if (!Perms.SET_INDESTRUCTIBLE.check(p)) {
+			Messages.send(p, "no_permission");
+			return 0;
+		}
+		s.indestructible = on;
+		Messages.send(p, on ? "set.indestructible.on" : "set.indestructible.off");
+		gates().sessions().sync(p);
+		return 1;
+	}
+
+	/** Fireproof or not; for an existing gate: /gp edit <gate>, this command, /gp confirm. */
+	private static int setFireproof(CommandContext<CommandSourceStack> c, boolean on) throws CommandSyntaxException {
+		ServerPlayer p = player(c);
+		CreateSession s = session(p);
+		if (s == null) return 0;
+		if (!Perms.SET_FIREPROOF.check(p)) {
+			Messages.send(p, "no_permission");
+			return 0;
+		}
+		s.fireproof = on;
+		Messages.send(p, on ? "set.fireproof.on" : "set.fireproof.off");
 		gates().sessions().sync(p);
 		return 1;
 	}

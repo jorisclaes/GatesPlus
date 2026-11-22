@@ -8,6 +8,8 @@ help: |-
   &e/gp set direction <vertical|horizontal> &7– animation direction
   &e/gp set animation <enabled|disabled> &7– animation on/off
   &e/gp set redstone <normal|inverted> &7– inverted redstone
+  &e/gp set indestructible <on|off> &7– indestructible or breakable
+  &e/gp set fireproof <on|off> &7– fireproof or flammable
   &e/gp set group <group|none> &7– share the gate with a group
   &e/gp confirm <name> &7– build the gate
   &e/gp cancel &7– stop the session
@@ -76,6 +78,12 @@ set:
     normal: "&aRedstone: power = open."
     inverted: "&aInverted redstone: no power = open."
     not_allowed: "&cInverted redstone is not allowed."
+  indestructible:
+    "on": "&aThe gate will be indestructible. &7Confirm with /gp confirm."
+    "off": "&eThe gate will be breakable. &7Confirm with /gp confirm."
+  fireproof:
+    "on": "&aThe gate will be fireproof. &7Confirm with /gp confirm."
+    "off": "&eThe gate will be flammable. &7Confirm with /gp confirm."
   group:
     done: "&aThe gate now belongs to group &d{0}&a."
     none: "&aThe gate is now personal."

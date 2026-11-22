@@ -18,6 +18,8 @@ public enum Perms {
 	GET_MARKER("gatesplus.get.marker", 0),
 	SET_INVERTED("gatesplus.set.inverted", 0),
 	SET_ANIMATION("gatesplus.set.animation", 0),
+	SET_INDESTRUCTIBLE("gatesplus.set.indestructible", 0),
+	SET_FIREPROOF("gatesplus.set.fireproof", 0),
 	BYPASS_LIMITS("gatesplus.bypass.limits", 2),
 	ADMIN_EDIT("gatesplus.admin.edit", 2),
 	ADMIN_REMOVE("gatesplus.admin.remove", 2),

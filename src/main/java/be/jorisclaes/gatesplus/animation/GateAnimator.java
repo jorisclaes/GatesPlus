@@ -39,6 +39,12 @@ import be.jorisclaes.gatesplus.mixin.DisplayAccessor;
  */
 public final class GateAnimator {
 	public static final String DISPLAY_TAG = "gatesplus_anim";
+	/**
+	 * Extra ticks a finished row keeps its display before it is swapped for the real block (closing)
+	 * or removed (opening). The client starts interpolating when the update arrives, a little after
+	 * the server sent it, so swapping exactly on time cuts off the end of the movement.
+	 */
+	private static final int SETTLE_TICKS = 2;
 
 	/** Places the real blocks of one finished closing row. */
 	public interface RowPlacer {
@@ -147,7 +153,7 @@ public final class GateAnimator {
 				startRow(a, a.rows.get(a.nextToStart));
 				a.nextToStart++;
 			}
-			while (a.nextToFinish < a.nextToStart && now >= a.rowStart(a.nextToFinish) + a.rowTicks) {
+			while (a.nextToFinish < a.nextToStart && now >= a.rowStart(a.nextToFinish) + a.rowTicks + SETTLE_TICKS) {
 				finishRow(a, a.rows.get(a.nextToFinish));
 				a.nextToFinish++;
 			}

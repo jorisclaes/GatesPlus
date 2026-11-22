@@ -8,6 +8,8 @@ help: |-
   &e/gp set direction <vertical|horizontal> &7– richting van de animatie
   &e/gp set animation <enabled|disabled> &7– animatie aan/uit
   &e/gp set redstone <normal|inverted> &7– omgekeerde redstone
+  &e/gp set indestructible <on|off> &7– onbreekbaar of breekbaar
+  &e/gp set fireproof <on|off> &7– vuurvast of brandbaar
   &e/gp set group <groep|none> &7– poort delen met een groep
   &e/gp confirm <naam> &7– bouw de poort
   &e/gp cancel &7– stop de sessie
@@ -76,6 +78,12 @@ set:
     normal: "&aRedstone: stroom = open."
     inverted: "&aRedstone omgekeerd: geen stroom = open."
     not_allowed: "&cOmgekeerde redstone is niet toegestaan."
+  indestructible:
+    "on": "&aDe poort wordt onbreekbaar. &7Bevestig met /gp confirm."
+    "off": "&eDe poort wordt breekbaar. &7Bevestig met /gp confirm."
+  fireproof:
+    "on": "&aDe poort wordt vuurvast. &7Bevestig met /gp confirm."
+    "off": "&eDe poort wordt brandbaar. &7Bevestig met /gp confirm."
   group:
     done: "&aPoort hoort nu bij groep &d{0}&a."
     none: "&aPoort is nu persoonlijk."
