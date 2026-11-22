@@ -119,6 +119,24 @@ public final class CreateSession {
 		return SetResult.CORNER2_REPLACED;
 	}
 
+	/**
+	 * Sets a specific corner (clicking a corner marker block): the top-left marker always sets
+	 * corner 1, the bottom-right marker corner 2, in whatever order they are clicked.
+	 */
+	public SetResult setCorner(Point which, BlockPos pos) {
+		touch();
+		if (which == Point.CORNER1) {
+			boolean replaced = corner1 != null;
+			corner1 = pos;
+			if (!replaced) history.push(Point.CORNER1);
+			return SetResult.CORNER1;
+		}
+		boolean replaced = corner2 != null;
+		corner2 = pos;
+		if (!replaced) history.push(Point.CORNER2);
+		return replaced ? SetResult.CORNER2_REPLACED : SetResult.CORNER2;
+	}
+
 	/** Left-click in trigger mode (position already validated by the caller). */
 	public SetResult clickTrigger(BlockPos pos, String blockId) {
 		touch();
@@ -139,17 +157,17 @@ public final class CreateSession {
 				trigger = null;
 				triggerBlock = null;
 			}
-			case CORNER2 -> {
-				corner2 = null;
-				mode = Mode.CORNERS;
-				// a trigger without a box makes no sense; drop it as well
-				if (trigger != null) {
-					history.remove(Point.TRIGGER);
-					trigger = null;
-					triggerBlock = null;
-				}
-			}
+			case CORNER2 -> corner2 = null;
 			case CORNER1 -> corner1 = null;
+		}
+		if (p != Point.TRIGGER) {
+			mode = Mode.CORNERS;
+			// a trigger without a complete box makes no sense; drop it as well
+			if (trigger != null) {
+				history.remove(Point.TRIGGER);
+				trigger = null;
+				triggerBlock = null;
+			}
 		}
 		if (corner1 == null && corner2 == null && trigger == null) dimension = null;
 		return p;

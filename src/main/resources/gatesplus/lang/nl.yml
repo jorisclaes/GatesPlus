@@ -2,7 +2,7 @@
 help: |-
   &6&lGatesPlus &7– poorten van (bijna) elk blok
   &e/gp create &7– start een nieuwe poort (je krijgt de selectiebijl)
-  &e/gp get markerblock [aantal] &7– markerblokken om hoeken in de lucht te zetten
+  &e/gp get markerblock &7– markerblokken voor linksboven (1) en rechtsonder (2)
   &e/gp set block <blok> &7– kies het blok (&e/gp list blocks&7)
   &e/gp set trigger &7– kies het trigger-blok met de bijl
   &e/gp set direction <vertical|horizontal> &7– richting van de animatie
@@ -24,7 +24,9 @@ wand:
   no_session: "&cGeen actieve sessie. Gebruik /gp create of /gp edit."
   other_dimension: "&cDeze sessie hoort bij een andere dimensie."
   corner1: "&6Hoek 1 &7gezet op &f{0} {1} {2}{3}"
-  corner2: "&cHoek 2 &7gezet op &f{0} {1} {2}{7} &7– {3}×{4}×{5} = &f{6} &7blokken"
+  corner2: "&cHoek 2 &7gezet op &f{0} {1} {2}{3}"
+  corner1_box: "&6Hoek 1 &7gezet op &f{0} {1} {2}{3} &7– {4}×{5}×{6} = &f{7} &7blokken"
+  corner2_box: "&cHoek 2 &7gezet op &f{0} {1} {2}{3} &7– {4}×{5}×{6} = &f{7} &7blokken"
   on_marker: " &a(markerblok)"
   hint_trigger: "&7Kies nu het trigger-blok met &e/gp set trigger&7, of pas eerst het blok aan met &e/gp set block&7."
   trigger_set: "&bTrigger-blok &7gezet op &f{0} {1} {2}"
@@ -37,7 +39,7 @@ wand:
 
 get:
   marker:
-    done: "&aJe kreeg {0} markerblokken. &7Plaats ze en klik erop met de bijl om er een hoek van te maken; ze verdwijnen als de poort gebouwd wordt."
+    done: "&aJe kreeg 2 markerblokken: &6linksboven (1) &aen &crechtsonder (2)&a. &7Plaats ze en klik erop met de bijl; ze verdwijnen als de poort gebouwd wordt."
 
 session:
   none: "&cJe hebt geen actieve sessie. Start met /gp create of /gp edit."

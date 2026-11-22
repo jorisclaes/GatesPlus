@@ -1,3 +1,4 @@
 {
-  "block.gatesplus.marker": "GatesPlus-markerblok"
+  "block.gatesplus.marker_top_left": "GatesPlus-markerblok (linksboven)",
+  "block.gatesplus.marker_bottom_right": "GatesPlus-markerblok (rechtsonder)"
 }

@@ -194,19 +194,22 @@ public final class SessionManager {
 			return;
 		}
 
-		// A marker block selects itself; any other block selects the air in front of the clicked
-		// face (gates are only built in air, markers are replaced by the gate).
-		boolean marker = MarkerBlocks.isMarker(level.getBlockState(clicked));
-		BlockPos pos = marker ? clicked : clicked.relative(face);
-		String suffix = marker ? Messages.raw(player, "wand.on_marker") : "";
-		CreateSession.SetResult r = s.clickCorner(pos);
-		switch (r) {
-			case CORNER1 -> Messages.actionBar(player, "wand.corner1", pos.getX(), pos.getY(), pos.getZ(), suffix);
-			case CORNER2, CORNER2_REPLACED -> Messages.actionBar(player, "wand.corner2", pos.getX(), pos.getY(), pos.getZ(),
-					s.sizeX(), s.sizeY(), s.sizeZ(), s.volume(), suffix);
-			default -> { }
+		// A corner marker selects itself and always sets its own corner (top-left = 1,
+		// bottom-right = 2). Any other block selects the air in front of the clicked face
+		// (gates are only built in air; markers are replaced by the gate).
+		CreateSession.Point markerCorner = MarkerBlocks.cornerOf(level.getBlockState(clicked));
+		boolean hadBox = s.hasBox();
+		BlockPos pos = markerCorner != null ? clicked : clicked.relative(face);
+		String suffix = markerCorner != null ? Messages.raw(player, "wand.on_marker") : "";
+		CreateSession.SetResult r = markerCorner != null ? s.setCorner(markerCorner, pos) : s.clickCorner(pos);
+		String key = r == CreateSession.SetResult.CORNER1 ? "wand.corner1" : "wand.corner2";
+		if (s.hasBox()) {
+			Messages.actionBar(player, key + "_box", pos.getX(), pos.getY(), pos.getZ(), suffix,
+					s.sizeX(), s.sizeY(), s.sizeZ(), s.volume());
+		} else {
+			Messages.actionBar(player, key, pos.getX(), pos.getY(), pos.getZ(), suffix);
 		}
-		if (r == CreateSession.SetResult.CORNER2) Messages.send(player, "wand.hint_trigger");
+		if (!hadBox && s.hasBox()) Messages.send(player, "wand.hint_trigger");
 		sync(player);
 	}
 

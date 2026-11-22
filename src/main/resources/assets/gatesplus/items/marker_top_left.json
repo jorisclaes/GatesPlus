@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "gatesplus:block/marker"
+    "model": "gatesplus:block/marker_top_left"
   }
 }

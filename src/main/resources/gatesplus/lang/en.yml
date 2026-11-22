@@ -2,7 +2,7 @@
 help: |-
   &6&lGatesPlus &7– gates made of (almost) any block
   &e/gp create &7– start a new gate (you get the selection axe)
-  &e/gp get markerblock [amount] &7– marker blocks to set corners in mid-air
+  &e/gp get markerblock &7– marker blocks for top left (1) and bottom right (2)
   &e/gp set block <block> &7– choose the block (&e/gp list blocks&7)
   &e/gp set trigger &7– choose the trigger block with the axe
   &e/gp set direction <vertical|horizontal> &7– animation direction
@@ -24,7 +24,9 @@ wand:
   no_session: "&cNo active session. Use /gp create or /gp edit."
   other_dimension: "&cThis session belongs to another dimension."
   corner1: "&6Corner 1 &7set at &f{0} {1} {2}{3}"
-  corner2: "&cCorner 2 &7set at &f{0} {1} {2}{7} &7– {3}×{4}×{5} = &f{6} &7blocks"
+  corner2: "&cCorner 2 &7set at &f{0} {1} {2}{3}"
+  corner1_box: "&6Corner 1 &7set at &f{0} {1} {2}{3} &7– {4}×{5}×{6} = &f{7} &7blocks"
+  corner2_box: "&cCorner 2 &7set at &f{0} {1} {2}{3} &7– {4}×{5}×{6} = &f{7} &7blocks"
   on_marker: " &a(marker block)"
   hint_trigger: "&7Now choose the trigger block with &e/gp set trigger&7, or change the block first with &e/gp set block&7."
   trigger_set: "&bTrigger block &7set at &f{0} {1} {2}"
@@ -37,7 +39,7 @@ wand:
 
 get:
   marker:
-    done: "&aYou got {0} marker blocks. &7Place them and click them with the axe to make a corner; they disappear when the gate is built."
+    done: "&aYou got 2 marker blocks: &6top left (1) &aand &cbottom right (2)&a. &7Place them and click them with the axe; they disappear when the gate is built."
 
 session:
   none: "&cYou have no active session. Start with /gp create or /gp edit."

@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -75,10 +74,7 @@ public final class GpCommand {
 						.then(literal("group").then(argument("group", StringArgumentType.word()).suggests(MY_GROUPS_OR_NONE)
 								.executes(GpCommand::setGroup))))
 				.then(literal("get").requires(Perms.GET_MARKER.require())
-						.then(literal("markerblock")
-								.executes(c -> getMarkers(c, 16))
-								.then(argument("amount", IntegerArgumentType.integer(1, 64))
-										.executes(c -> getMarkers(c, IntegerArgumentType.getInteger(c, "amount"))))))
+						.then(literal("markerblock").executes(GpCommand::getMarkers)))
 				.then(literal("list")
 						.executes(GpCommand::list)
 						.then(literal("blocks").executes(GpCommand::listBlocks)))
@@ -318,12 +314,15 @@ public final class GpCommand {
 				Messages.raw(p, g.isOpen() ? "panel.open" : "panel.closed"), InfoPanel.statusLabel(p, g.status()));
 	}
 
-	private static int getMarkers(CommandContext<CommandSourceStack> c, int amount) throws CommandSyntaxException {
+	/** Gives one top-left (corner 1) and one bottom-right (corner 2) marker block. */
+	private static int getMarkers(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
 		ServerPlayer p = player(c);
-		ItemStack stack = new ItemStack(MarkerBlocks.MARKER_ITEM, amount);
-		if (!p.getInventory().add(stack) || !stack.isEmpty()) ReturnChestTracker.drop(p.level(), p, stack);
-		Messages.send(p, "get.marker.done", amount);
-		return amount;
+		for (var item : new net.minecraft.world.item.Item[] {MarkerBlocks.TOP_LEFT_ITEM, MarkerBlocks.BOTTOM_RIGHT_ITEM}) {
+			ItemStack stack = new ItemStack(item);
+			if (!p.getInventory().add(stack) || !stack.isEmpty()) ReturnChestTracker.drop(p.level(), p, stack);
+		}
+		Messages.send(p, "get.marker.done");
+		return 1;
 	}
 
 	private static int listBlocks(CommandContext<CommandSourceStack> c) {

@@ -66,4 +66,22 @@ class CreateSessionTest {
 		assertEquals(CreateSession.Point.CORNER2, s.undo());
 		assertEquals(CreateSession.Point.CORNER1, s.undo());
 	}
+
+	@Test
+	void markersSetTheirOwnCornerInAnyOrder() {
+		CreateSession s = session();
+		assertEquals(CreateSession.SetResult.CORNER2, s.setCorner(CreateSession.Point.CORNER2, new BlockPos(3, 0, 0)));
+		assertNull(s.corner1());
+		assertFalse(s.hasBox());
+		assertEquals(CreateSession.SetResult.CORNER1, s.setCorner(CreateSession.Point.CORNER1, new BlockPos(0, 3, 0)));
+		assertTrue(s.hasBox());
+		assertEquals(CreateSession.SetResult.CORNER2_REPLACED, s.setCorner(CreateSession.Point.CORNER2, new BlockPos(4, 0, 0)));
+		s.enterTriggerMode();
+		s.clickTrigger(new BlockPos(6, 0, 0), "minecraft:stone");
+		assertEquals(CreateSession.Point.TRIGGER, s.undo());
+		// corner 1 was set last, so it is undone first; the box is then incomplete
+		assertEquals(CreateSession.Point.CORNER1, s.undo());
+		assertEquals(CreateSession.Mode.CORNERS, s.mode());
+		assertEquals(new BlockPos(4, 0, 0), s.corner2());
+	}
 }

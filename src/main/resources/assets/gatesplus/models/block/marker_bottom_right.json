@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:block/cube_all",
   "textures": {
-    "all": "gatesplus:block/marker"
+    "all": "gatesplus:block/marker_bottom_right"
   }
 }
