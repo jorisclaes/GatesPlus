@@ -35,8 +35,8 @@ import be.jorisclaes.gatesplus.mixin.DisplayAccessor;
  * and a row only starts when the previous one is done:
  * - opening: real blocks become air, then row after row shrinks away
  *   (vertical: bottom row first, retracting upwards; horizontal: left column first, retracting right);
- * - closing: vertical gates rise from the bottom row up (each block grows upwards), horizontal
- *   gates come back right column first; each row becomes real blocks as soon as it is done.
+ * - closing: the reverse order (vertical: top row first, growing down), a bit slower and with the
+ *   rows overlapping; each row becomes real blocks as soon as it is done.
  */
 public final class GateAnimator {
 	public static final String DISPLAY_TAG = "gatesplus_anim";
@@ -65,23 +65,28 @@ public final class GateAnimator {
 		/** Rows in animation order. */
 		final List<Row> rows = new ArrayList<>();
 		final long firstRowTick;
-		final int rowTicks;
+		/** Ticks one row takes to move. */
+		final int rowDuration;
+		/** Ticks between the starts of two rows (smaller than the duration = rows overlap). */
+		final int rowInterval;
 		/** Closing only: rows get their displays just before their turn (see {@link #tick}). */
 		int nextToSpawn;
 		int nextToStart;
 		int nextToFinish;
 
-		Animation(Gate gate, ServerLevel level, boolean opening, BlockState state, long firstRowTick, int rowTicks) {
+		Animation(Gate gate, ServerLevel level, boolean opening, BlockState state, long firstRowTick, int rowDuration,
+				int rowInterval) {
 			this.gate = gate;
 			this.level = level;
 			this.opening = opening;
 			this.state = state;
 			this.firstRowTick = firstRowTick;
-			this.rowTicks = rowTicks;
+			this.rowDuration = rowDuration;
+			this.rowInterval = rowInterval;
 		}
 
 		long rowStart(int i) {
-			return firstRowTick + (long) i * rowTicks;
+			return firstRowTick + (long) i * rowInterval;
 		}
 	}
 
@@ -118,6 +123,16 @@ public final class GateAnimator {
 		return Math.max(2, Math.round((float) Math.max(2, gate.animationTicks()) / rows));
 	}
 
+	/** Closing rows take 1.5x as long as opening rows. */
+	public static int closingRowDuration(Gate gate) {
+		return Math.max(3, Math.round(rowTicks(gate) * 1.5f));
+	}
+
+	/** The next closing row starts when the previous one is about 60% done. */
+	public static int closingRowInterval(Gate gate) {
+		return Math.max(1, Math.round(closingRowDuration(gate) * 0.6f));
+	}
+
 	/**
 	 * Starts an animation. The caller has already removed the real blocks when opening.
 	 * @param state the gate block state to show
@@ -126,15 +141,16 @@ public final class GateAnimator {
 		cancel(gate);
 		int rowCount = GateGeometry.rowCount(gate);
 		// first row starts one tick after spawning, so clients have the start state first
-		Animation anim = new Animation(gate, level, opening, state, now + 1, rowTicks(gate));
+		// Opening: each row in turn (liked as it is). Closing: a bit slower and the rows overlap, so
+		// the edge of the gate moves down calmly instead of jumping from row to row.
+		int duration = opening ? rowTicks(gate) : closingRowDuration(gate);
+		int interval = opening ? duration : closingRowInterval(gate);
+		Animation anim = new Animation(gate, level, opening, state, now + 1, duration, interval);
 		for (int i = 0; i < rowCount; i++) anim.rows.add(new Row());
 		for (BlockPos pos : GateGeometry.positions(gate)) {
 			int row = GateGeometry.row(gate, pos);
-			// Opening: first row first. Closing a vertical gate also goes bottom row first (the wall
-			// rises, instead of rows coming down from the top as if they were falling); closing a
-			// horizontal gate is the reverse of opening (right column first).
-			boolean firstRowFirst = opening || gate.direction() == GateDirection.VERTICAL;
-			anim.rows.get(firstRowFirst ? row : rowCount - 1 - row).positions.add(pos);
+			// opening: first row first; closing: last row first (vertical: top row first, going down)
+			anim.rows.get(opening ? row : rowCount - 1 - row).positions.add(pos);
 		}
 
 		if (opening) {
@@ -144,7 +160,7 @@ public final class GateAnimator {
 		} else {
 			// A collapsed display is still visible as a flat plane, so closing rows only appear when
 			// it is their turn: the first one now, the others one tick before they start.
-			spawnRow(anim, anim.rows.get(0), closingStart(gate));
+			spawnRow(anim, anim.rows.get(0), collapsed(gate));
 			anim.nextToSpawn = 1;
 		}
 		running.put(gate.id(), anim);
@@ -170,14 +186,14 @@ public final class GateAnimator {
 		while (it.hasNext()) {
 			Animation a = it.next();
 			while (a.nextToSpawn < a.rows.size() && now >= a.rowStart(a.nextToSpawn) - 1) {
-				spawnRow(a, a.rows.get(a.nextToSpawn), closingStart(a.gate));
+				spawnRow(a, a.rows.get(a.nextToSpawn), collapsed(a.gate));
 				a.nextToSpawn++;
 			}
 			while (a.nextToStart < a.nextToSpawn && now >= a.rowStart(a.nextToStart)) {
 				startRow(a, a.rows.get(a.nextToStart));
 				a.nextToStart++;
 			}
-			while (a.nextToFinish < a.nextToStart && now >= a.rowStart(a.nextToFinish) + a.rowTicks + SETTLE_TICKS) {
+			while (a.nextToFinish < a.nextToStart && now >= a.rowStart(a.nextToFinish) + a.rowDuration + SETTLE_TICKS) {
 				finishRow(a, a.rows.get(a.nextToFinish));
 				a.nextToFinish++;
 			}
@@ -190,7 +206,7 @@ public final class GateAnimator {
 		for (Display.BlockDisplay display : row.displays) {
 			DisplayAccessor d = (DisplayAccessor) display;
 			d.gatesplus$setInterpolationDelay(0);
-			d.gatesplus$setInterpolationDuration(a.rowTicks);
+			d.gatesplus$setInterpolationDuration(a.rowDuration);
 			d.gatesplus$setTransformation(target);
 		}
 	}
@@ -220,17 +236,6 @@ public final class GateAnimator {
 	}
 
 	/** A block squashed to zero thickness against its far side (top, or the "right" side). */
-	/**
-	 * Where a closing block starts: vertical gates grow up from the bottom of each block (rising),
-	 * horizontal gates come back out of the side they retracted into.
-	 */
-	private static Transformation closingStart(Gate gate) {
-		if (gate.direction() == GateDirection.VERTICAL) {
-			return new Transformation(new Vector3f(0, 0, 0), new Quaternionf(), new Vector3f(1, 0, 1), new Quaternionf());
-		}
-		return collapsed(gate);
-	}
-
 	private static Transformation collapsed(Gate gate) {
 		if (gate.direction() == GateDirection.VERTICAL) {
 			return new Transformation(new Vector3f(0, 1, 0), new Quaternionf(), new Vector3f(1, 0, 1), new Quaternionf());
