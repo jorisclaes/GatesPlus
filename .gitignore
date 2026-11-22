@@ -28,3 +28,6 @@ Thumbs.db
 hs_err_*.log
 replay_*.log
 *.hprof
+
+# logs written by unit tests / dev runs
+logs/

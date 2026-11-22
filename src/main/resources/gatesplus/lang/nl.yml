@@ -1,0 +1,228 @@
+# GatesPlus – Nederlandse meldingen. {0}, {1}, ... zijn waarden; &-codes zijn kleuren.
+help: |-
+  &6&lGatesPlus &7– poorten van (bijna) elk blok
+  &e/gp create &7– start een nieuwe poort (je krijgt de selectiebijl)
+  &e/gp set block <blok> &7– kies het blok (&e/gp list blocks&7)
+  &e/gp set trigger &7– kies het trigger-blok met de bijl
+  &e/gp set direction <vertical|horizontal> &7– richting van de animatie
+  &e/gp set animation <enabled|disabled> &7– animatie aan/uit
+  &e/gp set redstone <normal|inverted> &7– omgekeerde redstone
+  &e/gp set group <groep|none> &7– poort delen met een groep
+  &e/gp confirm <naam> &7– bouw de poort
+  &e/gp cancel &7– stop de sessie
+  &e/gp edit <id|naam> &7– pas een poort aan
+  &e/gp list &7– jouw poorten  &e/gp info <id|naam> &7– details
+  &e/gp repair <id|naam> &7– herstel met blokken uit je inventory
+  &e/gp rm <id|naam> &7– verwijder een poort
+  &e/gp group create|delete|add|remove|list|members|gates|info &7– groepen
+no_permission: "&cDaar heb je geen rechten voor."
+
+wand:
+  name: "GatesPlus selectiebijl"
+  inventory_full: "&cJe inventory is vol, maak plaats en gebruik /gp create opnieuw."
+  no_session: "&cGeen actieve sessie. Gebruik /gp create of /gp edit."
+  other_dimension: "&cDeze sessie hoort bij een andere dimensie."
+  corner1: "&6Hoek 1 &7gezet op &f{0} {1} {2}"
+  corner2: "&cHoek 2 &7gezet op &f{0} {1} {2} &7– {3}×{4}×{5} = &f{6} &7blokken"
+  hint_trigger: "&7Kies nu het trigger-blok met &e/gp set trigger&7, of pas eerst het blok aan met &e/gp set block&7."
+  trigger_set: "&bTrigger-blok &7gezet op &f{0} {1} {2}"
+  trigger_replaced: "&bTrigger-blok &7verplaatst naar &f{0} {1} {2}"
+  nothing_to_undo: "&7Niets meer om ongedaan te maken."
+  undo:
+    trigger: "&7Trigger-blok verwijderd."
+    corner2: "&7Hoek 2 verwijderd."
+    corner1: "&7Hoek 1 verwijderd."
+
+session:
+  none: "&cJe hebt geen actieve sessie. Start met /gp create of /gp edit."
+  cancelled: "&7Sessie gestopt."
+  timeout: "&7Je sessie is gestopt na {0} minuten zonder activiteit."
+  summary_actionbar: "&7{0}"
+
+create:
+  started: "&aSessie gestart! &7Linkerklik = hoek 1 (linksboven) en hoek 2 (rechtsonder), rechterklik = laatste punt weg."
+  no_client_mod: "&7Tip: met de GatesPlus client-mod zie je mooiere markers en een info-venster."
+  max_gates: "&cJe hebt al het maximum aantal poorten ({0})."
+
+edit:
+  started: "&aJe bewerkt poort &f{0} &7(#{1})&a. Pas aan en bevestig met /gp confirm [nieuwe naam]."
+  in_use: "&cPoort {0} wordt al bewerkt door iemand anders."
+  gone: "&cDeze poort bestaat niet meer."
+
+set:
+  block:
+    done: "&aBlok ingesteld op &f{0}"
+    not_allowed: "&c{0} is niet toegestaan. Zie /gp list blocks."
+  animation:
+    "on": "&aAnimatie aan."
+    "off": "&7Animatie uit."
+    global_off: "&cAnimaties zijn door de server uitgeschakeld."
+    not_allowed: "&cJe mag de animatie niet aanpassen."
+  direction:
+    vertical: "&aRichting: van onder naar boven."
+    horizontal: "&aRichting: van links naar rechts."
+  trigger:
+    need_corners: "&cZet eerst beide hoeken."
+    mode: "&bTrigger-modus: &7linkerklik op het blok dat de poort moet bedienen (max {0} blokken van de poort)."
+  redstone:
+    normal: "&aRedstone: stroom = open."
+    inverted: "&aRedstone omgekeerd: geen stroom = open."
+    not_allowed: "&cOmgekeerde redstone is niet toegestaan."
+  group:
+    done: "&aPoort hoort nu bij groep &d{0}&a."
+    none: "&aPoort is nu persoonlijk."
+    not_member: "&cJe bent geen lid van die groep."
+
+confirm:
+  need_name: "&cGeef een naam: /gp confirm <naam>"
+  bad_name: "&cOngeldige naam '{0}': gebruik 1-32 letters, cijfers, _ of - (niet enkel cijfers)."
+  no_box: "&cZet eerst beide hoeken met de bijl."
+  no_trigger: "&cKies eerst een trigger-blok met /gp set trigger."
+  wrong_dimension: "&cJe moet in dezelfde dimensie staan als je selectie."
+  too_big_dims: "&cTe groot: {0} breed, {1} hoog, {2} diep (max {3}/{4}/{5})."
+  too_big: "&cTe groot: {0} blokken (max {1})."
+  name_taken: "&cDe naam {0} is al in gebruik."
+  not_loaded: "&cNiet het hele gebied is geladen; kom dichterbij."
+  overlap: "&cDe poort overlapt met poort {0}."
+  overlap_trigger: "&cDe poort overlapt met het trigger-blok van poort {0}."
+  not_air: "&cEen poort kan alleen in lucht gebouwd worden: {0} blok(ken) staan in de weg (rood gemarkeerd)."
+  created: "&aPoort &f{0} &7(#{1}) &agebouwd!"
+  updated: "&aPoort &f{0} &7(#{1}) &abijgewerkt."
+
+trigger:
+  inside_gate: "&cHet trigger-blok mag niet in de poort liggen."
+  inside_other: "&cHet trigger-blok ligt in een andere poort."
+  too_far: "&cTe ver: het trigger-blok mag max {0} blokken van de poort liggen."
+  is_air: "&cHet trigger-blok bestaat niet meer; kies een nieuw met /gp set trigger."
+  taken: "&cDat blok is al de trigger van poort {0}."
+
+gate:
+  not_found: "&cGeen poort gevonden voor '{0}'."
+  ambiguous: "&eMeerdere poorten heten '{0}': {1}. Gebruik het id of groep:naam."
+  incomplete: "&ePoort {0}: {1} / {2} blokken. &7Ze blijft open tot ze af is: /gp repair {0}"
+  broken: "&cPoort {0} is kapot: {1} / {2} blokken – /gp repair {0}"
+  no_trigger: "&cHet trigger-blok van poort {0} is vernietigd; de poort staat open. Kies een nieuw met /gp edit {0}."
+  blocked: "&ePoort {0} kan niet sluiten: er staat iets in de opening."
+  wants_to_close: "&ePoort {0} wil sluiten – ga uit de opening!"
+
+protect:
+  indestructible: "&cPoort {0} is onbreekbaar."
+
+list:
+  empty: "&7Je hebt (nog) geen poorten. Start met /gp create."
+  header: "&6Poorten ({0}) &7– eigen: {1}/{2}"
+  line: "&7#{0} &f{1} &7[{2}] &7@ {3} &7{4} &7– {5}, {6}"
+  personal: "persoonlijk"
+  blocks: "&6Toegestane blokken ({0}): &f{1}"
+
+info:
+  header: "&6Poort {0}"
+
+rm:
+  done: "&aPoort {0} (#{1}) verwijderd."
+  not_owner: "&cAlleen de eigenaar (of een admin) mag poort {0} verwijderen."
+
+repair:
+  not_needed: "&7Poort {0} is niet kapot."
+  need_trigger: "&ePoort {0} heeft alle blokken, maar mist een trigger-blok: /gp edit {0}"
+  no_blocks: "&cJe hebt geen {3} bij je. Poort {0}: {1} / {2} blokken."
+  partial: "&ePoort {0}: {1} / {2} blokken. Er ontbreken er nog."
+  done: "&aPoort {0} hersteld: {1} / {2} blokken."
+
+chest:
+  placed: "&eJe blokken liggen in een kist op &f{0} {1} {2}&e. De kist verdwijnt als ze leeg is."
+
+storage:
+  error: "&cOpslaan mislukt, zie de serverlog."
+  busy: "&eEven geduld, de groep wordt nog opgeslagen."
+
+reload:
+  done: "&aGatesPlus herladen ({0} toegestane blokken)."
+
+group:
+  bad_name: "&cOngeldige groepsnaam '{0}'."
+  exists: "&cDe groep {0} bestaat al."
+  max: "&cJe mag maximaal {0} groepen hebben."
+  created: "&aGroep &d{0} &aaangemaakt. Voeg leden toe met /gp group add {0} <speler>."
+  deleted: "&aGroep {0} verwijderd; de poorten zijn weer persoonlijk van hun eigenaar."
+  not_found: "&cGroep '{0}' niet gevonden."
+  not_owner: "&cAlleen de eigenaar van groep {0} kan dat."
+  already_member: "&e{0} is al lid van {1}."
+  full: "&cDe groep is vol (max {0} leden)."
+  added: "&a{0} is toegevoegd aan {1}."
+  you_were_added: "&aJe bent toegevoegd aan groep &d{0} &adoor {1}."
+  not_member: "&c{0} is geen lid van {1}."
+  removed: "&a{0} is verwijderd uit {1}."
+  list_empty: "&7Je zit in geen enkele groep."
+  list_header: "&6Jouw groepen ({0})"
+  list_line: "&d{0} &7– eigenaar {1}, {2} leden, {3} poorten"
+  members_header: "&6Leden van {0} ({1})"
+  member_owner: "&f{0} &6(eigenaar) &7{1}"
+  member_line: "&f{0} &7{1}"
+  online: "&aonline"
+  offline: "&8offline"
+  gates_header: "&6Poorten van {0} ({1})"
+  gates_empty: "&7Deze groep heeft nog geen poorten."
+  info_header: "&6Groep &d{0} &7– eigenaar {1}"
+
+panel:
+  title_create: "Nieuwe poort"
+  title_edit: "Poort bewerken"
+  trigger_mode: "[trigger kiezen]"
+  new_gate: "&enieuw"
+  not_set: "&cniet gezet"
+  in_inventory: "(je hebt er {0})"
+  paid: "({0} betaald)"
+  "yes": "ja"
+  "no": "nee"
+  "on": "aan"
+  "off": "uit"
+  open: "open"
+  closed: "dicht"
+  indestructible: "onbreekbaar"
+  fireproof: "vuurvast"
+  animation_global_off: "uit (globaal)"
+  redstone_normal: "normaal"
+  redstone_inverted: "omgekeerd"
+  personal: "Persoonlijk ({0})"
+  owner: "eigenaar: {0}"
+  direction:
+    vertical: "verticaal"
+    horizontal: "horizontaal"
+  status:
+    ok: "OK"
+    incomplete: "ONVOLLEDIG – /gp repair"
+    broken: "KAPOT – /gp repair"
+    no_trigger: "TRIGGER ONTBREEKT – /gp edit"
+  label:
+    gate: "Poort"
+    block: "Blok"
+    trigger: "Triggerblok"
+    corners: "Hoek 1 / 2"
+    size: "Grootte"
+    blocks: "Blokken"
+    status: "Status"
+    protection: "Bescherming"
+    animation: "Animatie"
+    redstone: "Redstone"
+    group: "Groep"
+
+dev:
+  title: "&6GatesPlus devstats"
+  panel_on: "&aDev-paneel aan (nogmaals /gp devstats om uit te zetten)."
+  panel_off: "&7Dev-paneel uit."
+  gates: "Poorten"
+  loaded: "geladen"
+  active: "actief"
+  state: "Staat"
+  not_ok: "niet OK"
+  ticker: "Ticker"
+  checks: "Controles"
+  animations: "Animaties"
+  sessions: "Sessies"
+  groups: "groepen"
+  chests: "kisten"
+  storage: "Opslag"
+  queue: "Wachtrij"
+  last_error: "Laatste fout"
+  index: "Chunk-index"

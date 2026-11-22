@@ -1,0 +1,228 @@
+# GatesPlus – English messages. {0}, {1}, ... are values; &-codes are colours.
+help: |-
+  &6&lGatesPlus &7– gates made of (almost) any block
+  &e/gp create &7– start a new gate (you get the selection axe)
+  &e/gp set block <block> &7– choose the block (&e/gp list blocks&7)
+  &e/gp set trigger &7– choose the trigger block with the axe
+  &e/gp set direction <vertical|horizontal> &7– animation direction
+  &e/gp set animation <enabled|disabled> &7– animation on/off
+  &e/gp set redstone <normal|inverted> &7– inverted redstone
+  &e/gp set group <group|none> &7– share the gate with a group
+  &e/gp confirm <name> &7– build the gate
+  &e/gp cancel &7– stop the session
+  &e/gp edit <id|name> &7– change a gate
+  &e/gp list &7– your gates  &e/gp info <id|name> &7– details
+  &e/gp repair <id|name> &7– repair using blocks from your inventory
+  &e/gp rm <id|name> &7– remove a gate
+  &e/gp group create|delete|add|remove|list|members|gates|info &7– groups
+no_permission: "&cYou don't have permission to do that."
+
+wand:
+  name: "GatesPlus selection axe"
+  inventory_full: "&cYour inventory is full, make room and run /gp create again."
+  no_session: "&cNo active session. Use /gp create or /gp edit."
+  other_dimension: "&cThis session belongs to another dimension."
+  corner1: "&6Corner 1 &7set at &f{0} {1} {2}"
+  corner2: "&cCorner 2 &7set at &f{0} {1} {2} &7– {3}×{4}×{5} = &f{6} &7blocks"
+  hint_trigger: "&7Now choose the trigger block with &e/gp set trigger&7, or change the block first with &e/gp set block&7."
+  trigger_set: "&bTrigger block &7set at &f{0} {1} {2}"
+  trigger_replaced: "&bTrigger block &7moved to &f{0} {1} {2}"
+  nothing_to_undo: "&7Nothing left to undo."
+  undo:
+    trigger: "&7Trigger block removed."
+    corner2: "&7Corner 2 removed."
+    corner1: "&7Corner 1 removed."
+
+session:
+  none: "&cYou have no active session. Start with /gp create or /gp edit."
+  cancelled: "&7Session stopped."
+  timeout: "&7Your session stopped after {0} minutes without activity."
+  summary_actionbar: "&7{0}"
+
+create:
+  started: "&aSession started! &7Left-click = corner 1 (top left) and corner 2 (bottom right), right-click = remove last point."
+  no_client_mod: "&7Tip: with the GatesPlus client mod you get nicer markers and an info panel."
+  max_gates: "&cYou already have the maximum number of gates ({0})."
+
+edit:
+  started: "&aYou are editing gate &f{0} &7(#{1})&a. Make changes and confirm with /gp confirm [new name]."
+  in_use: "&cGate {0} is already being edited by someone else."
+  gone: "&cThis gate no longer exists."
+
+set:
+  block:
+    done: "&aBlock set to &f{0}"
+    not_allowed: "&c{0} is not allowed. See /gp list blocks."
+  animation:
+    "on": "&aAnimation on."
+    "off": "&7Animation off."
+    global_off: "&cAnimations are disabled by the server."
+    not_allowed: "&cYou may not change the animation."
+  direction:
+    vertical: "&aDirection: bottom to top."
+    horizontal: "&aDirection: left to right."
+  trigger:
+    need_corners: "&cSet both corners first."
+    mode: "&bTrigger mode: &7left-click the block that should operate the gate (max {0} blocks from the gate)."
+  redstone:
+    normal: "&aRedstone: power = open."
+    inverted: "&aInverted redstone: no power = open."
+    not_allowed: "&cInverted redstone is not allowed."
+  group:
+    done: "&aThe gate now belongs to group &d{0}&a."
+    none: "&aThe gate is now personal."
+    not_member: "&cYou are not a member of that group."
+
+confirm:
+  need_name: "&cGive a name: /gp confirm <name>"
+  bad_name: "&cInvalid name '{0}': use 1-32 letters, digits, _ or - (not only digits)."
+  no_box: "&cSet both corners with the axe first."
+  no_trigger: "&cChoose a trigger block with /gp set trigger first."
+  wrong_dimension: "&cYou must be in the same dimension as your selection."
+  too_big_dims: "&cToo big: {0} wide, {1} high, {2} deep (max {3}/{4}/{5})."
+  too_big: "&cToo big: {0} blocks (max {1})."
+  name_taken: "&cThe name {0} is already in use."
+  not_loaded: "&cNot the whole area is loaded; move closer."
+  overlap: "&cThe gate overlaps gate {0}."
+  overlap_trigger: "&cThe gate overlaps the trigger block of gate {0}."
+  not_air: "&cA gate can only be built in air: {0} block(s) are in the way (marked red)."
+  created: "&aGate &f{0} &7(#{1}) &abuilt!"
+  updated: "&aGate &f{0} &7(#{1}) &aupdated."
+
+trigger:
+  inside_gate: "&cThe trigger block can't be inside the gate."
+  inside_other: "&cThe trigger block is inside another gate."
+  too_far: "&cToo far: the trigger block must be within {0} blocks of the gate."
+  is_air: "&cThe trigger block no longer exists; choose a new one with /gp set trigger."
+  taken: "&cThat block is already the trigger of gate {0}."
+
+gate:
+  not_found: "&cNo gate found for '{0}'."
+  ambiguous: "&eSeveral gates are called '{0}': {1}. Use the id or group:name."
+  incomplete: "&eGate {0}: {1} / {2} blocks. &7It stays open until finished: /gp repair {0}"
+  broken: "&cGate {0} is broken: {1} / {2} blocks – /gp repair {0}"
+  no_trigger: "&cThe trigger block of gate {0} was destroyed; the gate is open. Choose a new one with /gp edit {0}."
+  blocked: "&eGate {0} can't close: something is in the opening."
+  wants_to_close: "&eGate {0} wants to close – step out of the opening!"
+
+protect:
+  indestructible: "&cGate {0} is indestructible."
+
+list:
+  empty: "&7You have no gates (yet). Start with /gp create."
+  header: "&6Gates ({0}) &7– own: {1}/{2}"
+  line: "&7#{0} &f{1} &7[{2}] &7@ {3} &7{4} &7– {5}, {6}"
+  personal: "personal"
+  blocks: "&6Allowed blocks ({0}): &f{1}"
+
+info:
+  header: "&6Gate {0}"
+
+rm:
+  done: "&aGate {0} (#{1}) removed."
+  not_owner: "&cOnly the owner (or an admin) may remove gate {0}."
+
+repair:
+  not_needed: "&7Gate {0} is not broken."
+  need_trigger: "&eGate {0} has all its blocks but is missing a trigger block: /gp edit {0}"
+  no_blocks: "&cYou don't carry any {3}. Gate {0}: {1} / {2} blocks."
+  partial: "&eGate {0}: {1} / {2} blocks. Some are still missing."
+  done: "&aGate {0} repaired: {1} / {2} blocks."
+
+chest:
+  placed: "&eYour blocks are in a chest at &f{0} {1} {2}&e. The chest disappears once it is empty."
+
+storage:
+  error: "&cSaving failed, see the server log."
+  busy: "&eOne moment, the group is still being saved."
+
+reload:
+  done: "&aGatesPlus reloaded ({0} allowed blocks)."
+
+group:
+  bad_name: "&cInvalid group name '{0}'."
+  exists: "&cThe group {0} already exists."
+  max: "&cYou may have at most {0} groups."
+  created: "&aGroup &d{0} &acreated. Add members with /gp group add {0} <player>."
+  deleted: "&aGroup {0} deleted; its gates are personal to their owners again."
+  not_found: "&cGroup '{0}' not found."
+  not_owner: "&cOnly the owner of group {0} can do that."
+  already_member: "&e{0} is already a member of {1}."
+  full: "&cThe group is full (max {0} members)."
+  added: "&a{0} was added to {1}."
+  you_were_added: "&aYou were added to group &d{0} &aby {1}."
+  not_member: "&c{0} is not a member of {1}."
+  removed: "&a{0} was removed from {1}."
+  list_empty: "&7You are not in any group."
+  list_header: "&6Your groups ({0})"
+  list_line: "&d{0} &7– owner {1}, {2} members, {3} gates"
+  members_header: "&6Members of {0} ({1})"
+  member_owner: "&f{0} &6(owner) &7{1}"
+  member_line: "&f{0} &7{1}"
+  online: "&aonline"
+  offline: "&8offline"
+  gates_header: "&6Gates of {0} ({1})"
+  gates_empty: "&7This group has no gates yet."
+  info_header: "&6Group &d{0} &7– owner {1}"
+
+panel:
+  title_create: "New gate"
+  title_edit: "Editing gate"
+  trigger_mode: "[choose trigger]"
+  new_gate: "&enew"
+  not_set: "&cnot set"
+  in_inventory: "(you have {0})"
+  paid: "({0} paid)"
+  "yes": "yes"
+  "no": "no"
+  "on": "on"
+  "off": "off"
+  open: "open"
+  closed: "closed"
+  indestructible: "indestructible"
+  fireproof: "fireproof"
+  animation_global_off: "off (global)"
+  redstone_normal: "normal"
+  redstone_inverted: "inverted"
+  personal: "Personal ({0})"
+  owner: "owner: {0}"
+  direction:
+    vertical: "vertical"
+    horizontal: "horizontal"
+  status:
+    ok: "OK"
+    incomplete: "INCOMPLETE – /gp repair"
+    broken: "BROKEN – /gp repair"
+    no_trigger: "TRIGGER MISSING – /gp edit"
+  label:
+    gate: "Gate"
+    block: "Block"
+    trigger: "Trigger"
+    corners: "Corner 1 / 2"
+    size: "Size"
+    blocks: "Blocks"
+    status: "Status"
+    protection: "Protection"
+    animation: "Animation"
+    redstone: "Redstone"
+    group: "Group"
+
+dev:
+  title: "&6GatesPlus devstats"
+  panel_on: "&aDev panel on (run /gp devstats again to turn it off)."
+  panel_off: "&7Dev panel off."
+  gates: "Gates"
+  loaded: "loaded"
+  active: "active"
+  state: "State"
+  not_ok: "not OK"
+  ticker: "Ticker"
+  checks: "Checks"
+  animations: "Animations"
+  sessions: "Sessions"
+  groups: "groups"
+  chests: "chests"
+  storage: "Storage"
+  queue: "Queue"
+  last_error: "Last error"
+  index: "Chunk index"

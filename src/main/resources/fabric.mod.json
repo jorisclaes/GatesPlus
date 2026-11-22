@@ -24,11 +24,7 @@
 		]
 	},
 	"mixins": [
-		"gatesplus.mixins.json",
-		{
-			"config": "gatesplus.client.mixins.json",
-			"environment": "client"
-		}
+		"gatesplus.mixins.json"
 	],
 	"depends": {
 		"fabricloader": ">=0.20.1",
