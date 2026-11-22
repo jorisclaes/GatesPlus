@@ -16,7 +16,7 @@ help: |-
   &e/gp edit <id|name> &7– change a gate
   &e/gp list &7– your gates  &e/gp list all &7– all gates (admin)  &e/gp info <id|name> &7– details
   &e/gp repair [id|name] &7– repair using blocks from your inventory (no name: the gate you are editing)
-  &e/gp rm <id|name> &7– remove a gate
+  &e/gp remove <id|name> &7– remove a gate
   &e/gp group create|delete|add|remove|list|members|gates|info &7– groups
 no_permission: "&cYou don't have permission to do that."
 

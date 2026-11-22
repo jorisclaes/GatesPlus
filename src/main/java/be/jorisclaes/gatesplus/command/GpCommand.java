@@ -87,7 +87,7 @@ public final class GpCommand {
 						.then(literal("all").requires(Perms.ADMIN_EDIT.require()).executes(GpCommand::listAll)))
 				.then(literal("info").then(argument("gate", StringArgumentType.word()).suggests(VISIBLE_GATES)
 						.executes(GpCommand::info)))
-				.then(literal("rm").requires(Perms.REMOVE.require())
+				.then(literal("remove").requires(Perms.REMOVE.require())
 						.then(argument("gate", StringArgumentType.word()).suggests(REMOVABLE_GATES).executes(GpCommand::remove)))
 				.then(literal("repair")
 						.executes(GpCommand::repairSession)

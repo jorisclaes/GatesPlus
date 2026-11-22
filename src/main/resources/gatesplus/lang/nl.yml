@@ -16,7 +16,7 @@ help: |-
   &e/gp edit <id|naam> &7– pas een poort aan
   &e/gp list &7– jouw poorten  &e/gp list all &7– alle poorten (admin)  &e/gp info <id|naam> &7– details
   &e/gp repair [id|naam] &7– herstel met blokken uit je inventory (zonder naam: de poort die je bewerkt)
-  &e/gp rm <id|naam> &7– verwijder een poort
+  &e/gp remove <id|naam> &7– verwijder een poort
   &e/gp group create|delete|add|remove|list|members|gates|info &7– groepen
 no_permission: "&cDaar heb je geen rechten voor."
 
