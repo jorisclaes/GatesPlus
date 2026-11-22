@@ -35,7 +35,8 @@ import be.jorisclaes.gatesplus.mixin.DisplayAccessor;
  * and a row only starts when the previous one is done:
  * - opening: real blocks become air, then row after row shrinks away
  *   (vertical: bottom row first, retracting upwards; horizontal: left column first, retracting right);
- * - closing: the reverse order; each row becomes real blocks again as soon as its animation ends.
+ * - closing: vertical gates rise from the bottom row up (each block grows upwards), horizontal
+ *   gates come back right column first; each row becomes real blocks as soon as it is done.
  */
 public final class GateAnimator {
 	public static final String DISPLAY_TAG = "gatesplus_anim";
@@ -129,8 +130,11 @@ public final class GateAnimator {
 		for (int i = 0; i < rowCount; i++) anim.rows.add(new Row());
 		for (BlockPos pos : GateGeometry.positions(gate)) {
 			int row = GateGeometry.row(gate, pos);
-			// opening: first row first; closing: last row first (reverse order)
-			anim.rows.get(opening ? row : rowCount - 1 - row).positions.add(pos);
+			// Opening: first row first. Closing a vertical gate also goes bottom row first (the wall
+			// rises, instead of rows coming down from the top as if they were falling); closing a
+			// horizontal gate is the reverse of opening (right column first).
+			boolean firstRowFirst = opening || gate.direction() == GateDirection.VERTICAL;
+			anim.rows.get(firstRowFirst ? row : rowCount - 1 - row).positions.add(pos);
 		}
 
 		if (opening) {
@@ -140,7 +144,7 @@ public final class GateAnimator {
 		} else {
 			// A collapsed display is still visible as a flat plane, so closing rows only appear when
 			// it is their turn: the first one now, the others one tick before they start.
-			spawnRow(anim, anim.rows.get(0), collapsed(gate));
+			spawnRow(anim, anim.rows.get(0), closingStart(gate));
 			anim.nextToSpawn = 1;
 		}
 		running.put(gate.id(), anim);
@@ -166,7 +170,7 @@ public final class GateAnimator {
 		while (it.hasNext()) {
 			Animation a = it.next();
 			while (a.nextToSpawn < a.rows.size() && now >= a.rowStart(a.nextToSpawn) - 1) {
-				spawnRow(a, a.rows.get(a.nextToSpawn), collapsed(a.gate));
+				spawnRow(a, a.rows.get(a.nextToSpawn), closingStart(a.gate));
 				a.nextToSpawn++;
 			}
 			while (a.nextToStart < a.nextToSpawn && now >= a.rowStart(a.nextToStart)) {
@@ -216,6 +220,17 @@ public final class GateAnimator {
 	}
 
 	/** A block squashed to zero thickness against its far side (top, or the "right" side). */
+	/**
+	 * Where a closing block starts: vertical gates grow up from the bottom of each block (rising),
+	 * horizontal gates come back out of the side they retracted into.
+	 */
+	private static Transformation closingStart(Gate gate) {
+		if (gate.direction() == GateDirection.VERTICAL) {
+			return new Transformation(new Vector3f(0, 0, 0), new Quaternionf(), new Vector3f(1, 0, 1), new Quaternionf());
+		}
+		return collapsed(gate);
+	}
+
 	private static Transformation collapsed(Gate gate) {
 		if (gate.direction() == GateDirection.VERTICAL) {
 			return new Transformation(new Vector3f(0, 1, 0), new Quaternionf(), new Vector3f(1, 0, 1), new Quaternionf());
