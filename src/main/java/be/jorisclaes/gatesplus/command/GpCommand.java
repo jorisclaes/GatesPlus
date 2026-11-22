@@ -364,7 +364,9 @@ public final class GpCommand {
 
 	static void sendGateLine(ServerPlayer p, Gate g) {
 		String group = gates().groups().scopeLabel(g);
-		Messages.send(p, "list.line", g.id(), g.name(), group == null ? Messages.raw(p, "list.personal") : group,
+		// name green when the gate works, red when it doesn't (broken, incomplete, trigger missing)
+		String name = (g.status() == be.jorisclaes.gatesplus.gate.GateStatus.OK ? "§a" : "§c") + g.name();
+		Messages.send(p, "list.line", g.id(), name, group == null ? Messages.raw(p, "list.personal") : group,
 				g.minX() + " " + g.minY() + " " + g.minZ(), g.block(),
 				Messages.raw(p, g.isOpen() ? "panel.open" : "panel.closed"), InfoPanel.statusLabel(p, g.status()));
 	}

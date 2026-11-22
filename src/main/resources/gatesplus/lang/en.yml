@@ -132,7 +132,7 @@ list:
   header_all: "&6All gates on the server ({0})"
   owner: "&8   owner: {0}"
   others_exist: "&7There are {0} gate(s) of other players; as an admin you can see them with &e/gp list all&7."
-  line: "&7#{0} &f{1} &7[{2}] &7@ {3} &7{4} &7– {5}, {6}"
+  line: "&7#{0} {1} &7[{2}] &7@ {3} &7{4} &7– {5}, {6}"
   personal: "personal"
   blocks: "&6Allowed blocks ({0}): &f{1}"
 

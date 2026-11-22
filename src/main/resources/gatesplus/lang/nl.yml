@@ -132,7 +132,7 @@ list:
   header_all: "&6Alle poorten op de server ({0})"
   owner: "&8   eigenaar: {0}"
   others_exist: "&7Er bestaan wel {0} poort(en) van andere spelers; als admin zie je ze met &e/gp list all&7."
-  line: "&7#{0} &f{1} &7[{2}] &7@ {3} &7{4} &7– {5}, {6}"
+  line: "&7#{0} {1} &7[{2}] &7@ {3} &7{4} &7– {5}, {6}"
   personal: "persoonlijk"
   blocks: "&6Toegestane blokken ({0}): &f{1}"
 

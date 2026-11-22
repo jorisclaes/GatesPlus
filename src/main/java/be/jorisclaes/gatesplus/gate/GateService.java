@@ -218,7 +218,8 @@ public final class GateService {
 		gate.lose(lost);
 		if (gate.status() != GateStatus.NO_TRIGGER) gate.setStatus(GateStatus.BROKEN);
 		save(gate);
-		notifyGate(gate, "gate.broken", gate.name(), gate.placedCount(), gate.totalCount());
+		// no chat message for normal players: /gp list shows the gate in red; dev mode still gets it
+		notifyGateDev(gate, "gate.broken", gate.name(), gate.placedCount(), gate.totalCount());
 	}
 
 	public void markNoTrigger(ServerLevel level, Gate gate) {
@@ -302,6 +303,15 @@ public final class GateService {
 
 	/** Sends a message to the gate owner and every online member of the gate's group. */
 	public void notifyGate(Gate gate, String key, Object... args) {
+		notify(gate, false, key, args);
+	}
+
+	/** Like {@link #notifyGate}, but only for players with dev mode (/gp devstats) on. */
+	public void notifyGateDev(Gate gate, String key, Object... args) {
+		notify(gate, true, key, args);
+	}
+
+	private void notify(Gate gate, boolean devOnly, String key, Object... args) {
 		MinecraftServer server = GatesPlus.get().server();
 		if (server == null) return;
 		Set<UUID> targets = new HashSet<>();
@@ -313,7 +323,7 @@ public final class GateService {
 		}
 		for (UUID uuid : targets) {
 			ServerPlayer p = server.getPlayerList().getPlayer(uuid);
-			if (p != null) Messages.send(p, key, args);
+			if (p != null && (!devOnly || GatesPlus.get().devStats().isOn(p))) Messages.send(p, key, args);
 		}
 	}
 
