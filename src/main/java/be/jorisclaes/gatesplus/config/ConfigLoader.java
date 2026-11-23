@@ -35,9 +35,36 @@ public final class ConfigLoader {
 				Files.copy(in, file);
 			}
 		}
+		addMissingOptions(file, warnings);
 		try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
 			return parse(reader, warnings);
 		}
+	}
+
+	/**
+	 * A config.yml from an older version lacks newer options: add them (with their comments) so
+	 * server owners can see and change them. A backup of the old file is kept as config.yml.bak.
+	 */
+	static void addMissingOptions(Path file, List<String> warnings) throws IOException {
+		String user = Files.readString(file, StandardCharsets.UTF_8);
+		String defaults;
+		try (InputStream in = ConfigLoader.class.getResourceAsStream(DEFAULT_RESOURCE)) {
+			if (in == null) return;
+			defaults = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+		}
+		Object tree;
+		try {
+			tree = new Yaml(new SafeConstructor(new LoaderOptions())).load(user);
+		} catch (RuntimeException e) {
+			return; // broken YAML: parse() reports it, don't touch the file
+		}
+		if (!(tree instanceof Map<?, ?> map)) return;
+		ConfigUpdater.Result r = ConfigUpdater.update(user, defaults, map);
+		if (r.added().isEmpty()) return;
+		Files.writeString(file.resolveSibling("config.yml.bak"), user, StandardCharsets.UTF_8);
+		Files.writeString(file, r.text(), StandardCharsets.UTF_8);
+		warnings.add("config.yml aangevuld met nieuwe opties (standaardwaarde): " + String.join(", ", r.added())
+				+ " - oude versie bewaard als config.yml.bak");
 	}
 
 	public static GatesPlusConfig parse(Reader reader, List<String> warnings) {

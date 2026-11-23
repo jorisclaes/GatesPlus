@@ -245,6 +245,8 @@ GatesPlus werkt met [LuckPerms](https://luckperms.net/) (via fabric-permissions-
 
 Alles staat in `config/gatesplus/config.yml`. Na een wijziging: `/gp reload` (behalve `storage`, daarvoor moet de server herstarten).
 
+**Na een update van GatesPlus** worden nieuwe opties automatisch aan je bestaande `config.yml` toegevoegd, met hun standaardwaarde en uitleg. Je eigen waarden en commentaar blijven staan; de vorige versie wordt bewaard als `config.yml.bak`. In de serverlog staat welke opties erbij kwamen.
+
 ```yaml
 language: nl                 # nl | en | auto (volgt de taal van elke speler)
 
