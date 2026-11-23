@@ -50,7 +50,7 @@ Gebruik de project-skill **`gatesplus-dev`** (`.claude/skills/gatesplus-dev/`) b
 **Aanmaken en selecteren**
 - Poort maken: `/gp create` → bijl (houten bijl met CustomData-tag) → hoeken → `/gp set trigger` → `/gp confirm <naam>`. Elke poort is altijd aanpasbaar met `/gp edit <id|naam>`; `/gp set ...` werkt alleen in een create/edit-sessie en wordt pas bij `/gp confirm` opgeslagen.
 - Linkerklik op een gewoon blok = hoek op het **luchtblok ervoor**; linkerklik op een markerblok = hoek **op de marker**. Rechterklik = laatste punt weg (trigger → hoek 2 → hoek 1).
-- Markerblokken: `/gp get markerblock` geeft er **2** (linksboven "1" goud = hoek 1, rechtsonder "2" rood = hoek 2), **alleen in een sessie**. Einde sessie: markers uit inventory én wereld weg. Markers in de poort verdwijnen bij bouwen. Eigen mod-blok ⇒ **client-mod verplicht** voor elke speler.
+- Markerblokken: `/gp get markerblock` geeft er **2** (linksboven "1" goud = hoek 1, rechtsonder "2" rood = hoek 2), **alleen in een sessie**. Een marker **plaatsen zet meteen zijn hoek** (zoals klikken met de bijl); hoogstens één "1" en één "2" in de wereld: opnieuw plaatsen verhuist de marker (oude verdwijnt). Einde sessie: markers uit inventory én wereld weg. Markers in de poort verdwijnen bij bouwen. Eigen mod-blok ⇒ **client-mod verplicht** voor elke speler.
 - Bijl en markers zijn vergrendeld (niet droppen, niet in containers, niet aan item frames); weg bij confirm/cancel/uitloggen/dood/timeout.
 - Poort bouwt **alleen in lucht** (markers tellen als vrij); er wordt nooit een bestaand blok vervangen (anti-minen).
 - Id globaal uniek; naam uniek per scope (persoonlijk of groep). `/gp remove` (niet `rm`).
@@ -65,7 +65,7 @@ Gebruik de project-skill **`gatesplus-dev`** (`.claude/skills/gatesplus-dev/`) b
 - Rij per rij; de **volgende rij start pas als de vorige klaar is** (openen én sluiten).
 - Verticaal openen: van onder naar boven, elke rij trekt zich omhoog terug (gebruiker vindt dit goed).
 - Verticaal sluiten: **van boven naar beneden**, 1,5× trager per rij dan openen; rijen verschijnen pas als ze aan de beurt zijn (een platgedrukte display is anders zichtbaar als vlak); elke rij wordt een echt blok zodra ze klaar is.
-- Na elke rij 2 ticks "settle" voordat de display wordt vervangen/verwijderd.
+- Na elke rij 2 ticks "settle" voordat de display wordt vervangen/verwijderd. Bij sluiten blijft de display nog 3 ticks over het echte blok staan (iets groter, vaste lichtwaarde) tegen flikkeren.
 - Animatie globaal uit te zetten in config (dan kan niemand ze aanzetten) en per poort.
 
 **Kapot / onvolledig / blokken**

@@ -16,10 +16,12 @@ import com.mojang.math.Transformation;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Brightness;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.state.BlockState;
 
 import be.jorisclaes.gatesplus.gate.Gate;
@@ -47,6 +49,12 @@ public final class GateAnimator {
 	 * the server sent it, so swapping exactly on time cuts off the end of the movement.
 	 */
 	private static final int SETTLE_TICKS = 2;
+	/**
+	 * Closing: ticks a finished row keeps its display on top of the freshly placed real block. The
+	 * client needs a frame or two to rebuild the chunk mesh; removing the display in the same tick
+	 * leaves a short hole (flicker).
+	 */
+	private static final int OVERLAP_TICKS = 3;
 
 	/** Places the real blocks of one finished closing row. */
 	public interface RowPlacer {
@@ -92,6 +100,10 @@ public final class GateAnimator {
 	}
 
 	private final Map<Integer, Animation> running = new HashMap<>();
+	/** Displays of finished closing rows, removed at the given tick (see {@link #OVERLAP_TICKS}). */
+	private record Lingering(int gateId, Display.BlockDisplay display, long removeAt) {}
+	private final List<Lingering> lingering = new ArrayList<>();
+	private long lastTick;
 	/** Displays spawned by running animations; any other tagged display is a leftover and removed. */
 	private final Set<UUID> ownDisplays = new HashSet<>();
 	private final RowPlacer placer;
@@ -115,7 +127,7 @@ public final class GateAnimator {
 	public int displayCount() {
 		int n = 0;
 		for (Animation a : running.values()) for (Row r : a.rows) n += r.displays.size();
-		return n;
+		return n + lingering.size();
 	}
 
 	/** Ticks each row takes: the gate's animation time spread over its rows (min. 2). */
@@ -170,6 +182,12 @@ public final class GateAnimator {
 			((BlockDisplayAccessor) display).gatesplus$setBlockState(a.state);
 			((DisplayAccessor) display).gatesplus$setViewRange(1.5f);
 			((DisplayAccessor) display).gatesplus$setTransformation(startState);
+			if (!a.opening) {
+				// Closing: the position is still air now. Fix the light at that value, otherwise the
+				// display turns dark as soon as the real (solid) block is placed around it.
+				((DisplayAccessor) display).gatesplus$setBrightnessOverride(new Brightness(
+						a.level.getBrightness(LightLayer.BLOCK, pos), a.level.getBrightness(LightLayer.SKY, pos)));
+			}
 			ownDisplays.add(display.getUUID());
 			a.level.addFreshEntity(display);
 			row.displays.add(display);
@@ -177,6 +195,12 @@ public final class GateAnimator {
 	}
 
 	public void tick(long now) {
+		lastTick = now;
+		lingering.removeIf(l -> {
+			if (now < l.removeAt()) return false;
+			discard(l.display());
+			return true;
+		});
 		Iterator<Animation> it = running.values().iterator();
 		while (it.hasNext()) {
 			Animation a = it.next();
@@ -197,7 +221,7 @@ public final class GateAnimator {
 	}
 
 	private static void startRow(Animation a, Row row) {
-		Transformation target = a.opening ? collapsed(a.gate) : full();
+		Transformation target = a.opening ? collapsed(a.gate) : covering();
 		for (Display.BlockDisplay display : row.displays) {
 			DisplayAccessor d = (DisplayAccessor) display;
 			d.gatesplus$setInterpolationDelay(0);
@@ -207,27 +231,51 @@ public final class GateAnimator {
 	}
 
 	private void finishRow(Animation a, Row row) {
-		if (!a.opening) placer.placeRow(a.level, a.gate, row.positions);
-		for (Display.BlockDisplay d : row.displays) {
-			ownDisplays.remove(d.getUUID());
-			d.discard();
+		if (a.opening) {
+			for (Display.BlockDisplay d : row.displays) discard(d);
+		} else {
+			placer.placeRow(a.level, a.gate, row.positions);
+			for (Display.BlockDisplay d : row.displays) lingering.add(new Lingering(a.gate.id(), d, lastTick + OVERLAP_TICKS));
 		}
 		row.displays.clear();
+	}
+
+	private void discard(Display.BlockDisplay d) {
+		ownDisplays.remove(d.getUUID());
+		d.discard();
 	}
 
 	/** Stops an animation immediately and puts the gate in its final state. */
 	public void cancel(Gate gate) {
 		Animation a = running.remove(gate.id());
-		if (a == null) return;
-		for (int i = a.nextToFinish; i < a.rows.size(); i++) finishRow(a, a.rows.get(i));
+		if (a != null) {
+			for (int i = a.nextToFinish; i < a.rows.size(); i++) finishRow(a, a.rows.get(i));
+		}
+		// no overlap displays may hang over a gate that opens again or is removed
+		lingering.removeIf(l -> {
+			if (l.gateId() != gate.id()) return false;
+			discard(l.display());
+			return true;
+		});
 	}
 
 	public void cancelAll() {
 		for (Animation a : new ArrayList<>(running.values())) cancel(a.gate);
+		for (Lingering l : lingering) discard(l.display());
+		lingering.clear();
 	}
 
 	private static Transformation full() {
 		return new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(1, 1, 1), new Quaternionf());
+	}
+
+	/**
+	 * Closing end state: a hair larger than a block, so the display cleanly covers the real block
+	 * during {@link #OVERLAP_TICKS} instead of z-fighting with it.
+	 */
+	private static Transformation covering() {
+		return new Transformation(new Vector3f(-0.001f, -0.001f, -0.001f), new Quaternionf(),
+				new Vector3f(1.002f, 1.002f, 1.002f), new Quaternionf());
 	}
 
 	/** A block squashed to zero thickness against its far side (top, or the "right" side). */

@@ -42,7 +42,7 @@ wand:
 get:
   marker:
     no_session: "&cYou only get marker blocks during a session: start /gp create or /gp edit <gate> first."
-    done: "&aYou got 2 marker blocks: &6top left (1) &aand &cbottom right (2)&a. &7Place them and click them with the axe; they disappear when the gate is built."
+    done: "&aYou got 2 marker blocks: &6top left (1) &aand &cbottom right (2)&a. &7Place them: each block sets its own corner right away. Placing one again moves that marker; they disappear when the gate is built."
 
 session:
   none: "&cYou have no active session. Start with /gp create or /gp edit."

@@ -42,7 +42,7 @@ wand:
 get:
   marker:
     no_session: "&cMarkerblokken krijg je alleen tijdens een sessie: start eerst /gp create of /gp edit <poort>."
-    done: "&aJe kreeg 2 markerblokken: &6linksboven (1) &aen &crechtsonder (2)&a. &7Plaats ze en klik erop met de bijl; ze verdwijnen als de poort gebouwd wordt."
+    done: "&aJe kreeg 2 markerblokken: &6linksboven (1) &aen &crechtsonder (2)&a. &7Plaats ze: elk blok zet meteen zijn eigen hoek. Opnieuw plaatsen verplaatst de marker; ze verdwijnen als de poort gebouwd wordt."
 
 session:
   none: "&cJe hebt geen actieve sessie. Start met /gp create of /gp edit."

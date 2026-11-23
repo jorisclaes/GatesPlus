@@ -86,7 +86,9 @@ Om een hoek midden in de lucht te zetten gebruik je markerblokken:
 /gp get markerblock
 ```
 
-Je krijgt er twee: een **gouden "1"** (linksboven, hoek 1) en een **rode "2"** (rechtsonder, hoek 2). Plaats ze waar de hoeken moeten komen en klik erop met de bijl; elk blok zet altijd zijn eigen hoek, in welke volgorde je ook klikt.
+Je krijgt er twee: een **gouden "1"** (linksboven, hoek 1) en een **rode "2"** (rechtsonder, hoek 2). Plaats ze waar de hoeken moeten komen: **plaatsen zet meteen de hoek**, net alsof je er met de bijl op klikt (klikken met de bijl mag ook). Elk blok zet altijd zijn eigen hoek, in welke volgorde je ze ook plaatst.
+
+- Er staat altijd hoogstens **één "1" en één "2"**: plaats je een marker opnieuw, dan verdwijnt de oude en verhuist de hoek mee.
 
 - Markerblokken krijg je **alleen tijdens een sessie** (`/gp create` of `/gp edit`).
 - Markers ín de poort verdwijnen vanzelf als de poort gebouwd wordt.

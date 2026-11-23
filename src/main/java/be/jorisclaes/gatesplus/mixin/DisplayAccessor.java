@@ -20,4 +20,7 @@ public interface DisplayAccessor {
 
 	@Invoker("setViewRange")
 	void gatesplus$setViewRange(float range);
+
+	@Invoker("setBrightnessOverride")
+	void gatesplus$setBrightnessOverride(net.minecraft.util.Brightness brightness);
 }

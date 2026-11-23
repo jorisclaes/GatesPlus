@@ -67,14 +67,19 @@ public final class CreateSession {
 	/** A marker block placed during this session, removed again when the session ends. */
 	public record PlacedMarker(net.minecraft.server.level.ServerLevel level, BlockPos pos) {}
 
-	private final java.util.List<PlacedMarker> placedMarkers = new java.util.ArrayList<>();
+	/** At most one placed marker per corner: placing it again moves it. */
+	private final java.util.Map<Point, PlacedMarker> placedMarkers = new java.util.EnumMap<>(Point.class);
 
-	public void addPlacedMarker(net.minecraft.server.level.ServerLevel level, BlockPos pos) {
-		placedMarkers.add(new PlacedMarker(level, pos));
+	/**
+	 * Remembers a newly placed marker for {@code corner}.
+	 * @return the previously placed marker of that corner (to be removed from the world), or null
+	 */
+	public PlacedMarker putPlacedMarker(Point corner, net.minecraft.server.level.ServerLevel level, BlockPos pos) {
+		return placedMarkers.put(corner, new PlacedMarker(level, pos));
 	}
 
-	public java.util.List<PlacedMarker> placedMarkers() {
-		return placedMarkers;
+	public java.util.Collection<PlacedMarker> placedMarkers() {
+		return placedMarkers.values();
 	}
 
 	/**

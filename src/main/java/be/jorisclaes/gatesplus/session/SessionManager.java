@@ -126,12 +126,47 @@ public final class SessionManager {
 		}
 	}
 
-	/** @return false when the player has no session (the marker is then removed again) */
+	/**
+	 * A marker was placed: it immediately sets its own corner (as if clicked with the wand), and an
+	 * earlier marker of the same corner is removed, so there is at most one "1" and one "2".
+	 * @return false when the marker cannot be used here (it is then removed again)
+	 */
 	public boolean onMarkerPlaced(ServerPlayer player, ServerLevel level, BlockPos pos) {
 		CreateSession s = get(player);
 		if (s == null) return false;
-		s.addPlacedMarker(level, pos);
-		s.touch();
+		CreateSession.Point corner = MarkerBlocks.cornerOf(level.getBlockState(pos));
+		if (corner == null) return false;
+		String dim = GateManager.dimensionId(level);
+		if (s.dimension() != null && !s.dimension().equals(dim)) {
+			Messages.actionBar(player, "wand.other_dimension");
+			// give the item back (survival consumed it); the block itself is removed by the caller
+			if (!player.hasInfiniteMaterials()) {
+				player.getInventory().add(new net.minecraft.world.item.ItemStack(
+						corner == CreateSession.Point.CORNER1 ? MarkerBlocks.TOP_LEFT_ITEM : MarkerBlocks.BOTTOM_RIGHT_ITEM));
+			}
+			return false;
+		}
+		s.setDimension(dim);
+
+		CreateSession.PlacedMarker old = s.putPlacedMarker(corner, level, pos);
+		if (old != null && !old.pos().equals(pos) && old.level().isLoaded(old.pos())
+				&& MarkerBlocks.cornerOf(old.level().getBlockState(old.pos())) == corner) {
+			old.level().removeBlock(old.pos(), false);
+		}
+
+		invalid.remove(player.getUUID());
+		boolean hadBox = s.hasBox();
+		CreateSession.SetResult r = s.setCorner(corner, pos);
+		String key = r == CreateSession.SetResult.CORNER1 ? "wand.corner1" : "wand.corner2";
+		String suffix = Messages.raw(player, "wand.on_marker");
+		if (s.hasBox()) {
+			Messages.actionBar(player, key + "_box", pos.getX(), pos.getY(), pos.getZ(), suffix,
+					s.sizeX(), s.sizeY(), s.sizeZ(), s.volume());
+		} else {
+			Messages.actionBar(player, key, pos.getX(), pos.getY(), pos.getZ(), suffix);
+		}
+		if (!hadBox && s.hasBox()) Messages.send(player, "wand.hint_trigger");
+		sync(player);
 		return true;
 	}
 
