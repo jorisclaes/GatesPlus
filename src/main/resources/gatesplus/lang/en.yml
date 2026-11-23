@@ -173,6 +173,7 @@ group:
   not_found: "&cGroup '{0}' not found."
   not_owner: "&cOnly the owner of group {0} can do that."
   already_member: "&e{0} is already a member of {1}."
+  player_not_online: "&c{0} is not online; you can only add online players."
   full: "&cThe group is full (max {0} members)."
   added: "&a{0} was added to {1}."
   you_were_added: "&aYou were added to group &d{0} &aby {1}."

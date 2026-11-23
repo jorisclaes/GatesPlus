@@ -18,7 +18,6 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.SharedSuggestionProvider;
-import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
@@ -482,9 +481,5 @@ public final class GpCommand {
 		if (g.ownerName().equalsIgnoreCase(name)) return Map.entry(g.ownerUuid(), g.ownerName());
 		for (var e : g.members().entrySet()) if (e.getValue().equalsIgnoreCase(name)) return e;
 		return null;
-	}
-
-	static ServerPlayer onlinePlayer(CommandContext<CommandSourceStack> c, String arg) throws CommandSyntaxException {
-		return EntityArgument.getPlayer(c, arg);
 	}
 }

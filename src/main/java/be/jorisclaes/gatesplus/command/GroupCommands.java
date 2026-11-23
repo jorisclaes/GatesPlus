@@ -18,7 +18,6 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.SharedSuggestionProvider;
-import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.server.level.ServerPlayer;
 
 import be.jorisclaes.gatesplus.GatesPlus;
@@ -55,6 +54,18 @@ final class GroupCommands {
 		return SharedSuggestionProvider.suggest(names, b);
 	};
 
+	/** Online players that are not in the group yet (so never yourself, no @-selectors). */
+	private static final SuggestionProvider<CommandSourceStack> ADDABLE_PLAYERS = (c, b) -> {
+		Group g = gates().groups().byName(StringArgumentType.getString(c, "group"));
+		List<String> names = new ArrayList<>();
+		for (ServerPlayer online : c.getSource().getServer().getPlayerList().getPlayers()) {
+			if (g != null && g.contains(online.getUUID())) continue;
+			if (c.getSource().getPlayer() == online) continue;
+			names.add(online.getGameProfile().name());
+		}
+		return SharedSuggestionProvider.suggest(names, b);
+	};
+
 	private static final SuggestionProvider<CommandSourceStack> MEMBERS = (c, b) -> {
 		Group g = gates().groups().byName(StringArgumentType.getString(c, "group"));
 		return SharedSuggestionProvider.suggest(g == null ? List.of() : g.members().values(), b);
@@ -66,7 +77,7 @@ final class GroupCommands {
 				.then(literal("delete").then(argument("group", StringArgumentType.word()).suggests(OWNED_GROUPS)
 						.executes(GroupCommands::delete)))
 				.then(literal("add").then(argument("group", StringArgumentType.word()).suggests(OWNED_GROUPS)
-						.then(argument("player", EntityArgument.player()).executes(GroupCommands::add))))
+						.then(argument("player", StringArgumentType.word()).suggests(ADDABLE_PLAYERS).executes(GroupCommands::add))))
 				.then(literal("remove").then(argument("group", StringArgumentType.word()).suggests(OWNED_GROUPS)
 						.then(argument("player", StringArgumentType.word()).suggests(MEMBERS).executes(GroupCommands::removeMember))))
 				.then(literal("list").executes(GroupCommands::list))
@@ -154,7 +165,12 @@ final class GroupCommands {
 		ServerPlayer p = GpCommand.player(c);
 		Group g = manageable(p, GpCommand.str(c, "group"));
 		if (g == null) return 0;
-		ServerPlayer target = GpCommand.onlinePlayer(c, "player");
+		String targetName = GpCommand.str(c, "player");
+		ServerPlayer target = c.getSource().getServer().getPlayerList().getPlayerByName(targetName);
+		if (target == null) {
+			Messages.send(p, "group.player_not_online", targetName);
+			return 0;
+		}
 		if (g.contains(target.getUUID())) {
 			Messages.send(p, "group.already_member", target.getGameProfile().name(), g.name());
 			return 0;

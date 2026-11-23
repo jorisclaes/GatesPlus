@@ -173,6 +173,7 @@ group:
   not_found: "&cGroep '{0}' niet gevonden."
   not_owner: "&cAlleen de eigenaar van groep {0} kan dat."
   already_member: "&e{0} is al lid van {1}."
+  player_not_online: "&c{0} is niet online; je kunt alleen online spelers toevoegen."
   full: "&cDe groep is vol (max {0} leden)."
   added: "&a{0} is toegevoegd aan {1}."
   you_were_added: "&aJe bent toegevoegd aan groep &d{0} &adoor {1}."

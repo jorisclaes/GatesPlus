@@ -146,7 +146,7 @@ Je kunt de bijl en markerblokken niet droppen, niet in een kist of hopper steken
 |---|---|
 | `/gp group create <groep>` | Maakt een groep; jij bent de eigenaar. |
 | `/gp group delete <groep>` | Verwijdert de groep; de poorten worden weer persoonlijk van hun eigenaar. |
-| `/gp group add <groep> <speler>` | Voegt een (online) speler toe. |
+| `/gp group add <groep> <speler>` | Voegt een online speler toe. Tab-aanvulling toont alleen online spelers die nog geen lid zijn. |
 | `/gp group remove <groep> <speler>` | Haalt een lid uit de groep. |
 | `/gp group list` | Groepen waar je in zit. |
 | `/gp group members <groep>` | Leden van een groep (online/offline). |
