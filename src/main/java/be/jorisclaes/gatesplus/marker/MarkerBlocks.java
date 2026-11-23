@@ -126,6 +126,14 @@ public final class MarkerBlocks {
 		};
 	}
 
+	/** Corner of a vanilla marker item (tagged concrete), or null. Cheap for every other item. */
+	public static CreateSession.Point vanillaMarkerCorner(ItemStack stack) {
+		if (stack.isEmpty() || !stack.has(DataComponents.CUSTOM_DATA)) return null;
+		Item item = stack.getItem();
+		if (item != Blocks.CONCRETE.yellow().asItem() && item != Blocks.CONCRETE.red().asItem()) return null;
+		return cornerOfItem(stack);
+	}
+
 	public static boolean isMarkerItem(ItemStack stack) {
 		return cornerOfItem(stack) != null;
 	}

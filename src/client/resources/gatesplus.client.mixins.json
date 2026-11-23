@@ -1,0 +1,11 @@
+{
+	"required": true,
+	"package": "be.jorisclaes.gatesplus.client.mixin",
+	"compatibilityLevel": "JAVA_25",
+	"client": [
+		"ItemModelResolverMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

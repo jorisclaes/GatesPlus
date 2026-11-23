@@ -44,7 +44,7 @@ Bouw poorten van (bijna) elk blok. Een poort gaat **vloeiend open en dicht met r
 > |---|---|---|
 > | Selectie | doorzichtige kaders (goud/rood/groen/blauw) | nepblokken die alleen jij ziet (goud = hoek 1, redstone = hoek 2, groen glas = randen, diamant = trigger) |
 > | Info-venster / dev-paneel | HUD-venster rechtsboven | scorebord-zijbalk rechts |
-> | Markerblokken | de eigen markerblokken met "1"/"2" op de textuur (de server zelf houdt beton) | gele/rode beton met een zwevend "1"/"2" |
+> | Markerblokken | de eigen markerblokken met "1"/"2" op de textuur, ook in je inventory en hand (de server zelf houdt beton) | gele/rode beton met een zwevend "1"/"2" |
 >
 > Zet een serverbeheerder `session.custom-marker-blocks: true`, dan gebruikt GatesPlus eigen markerblokken met textuur; dan is de mod **wel verplicht bij elke speler** (anders kunnen ze niet joinen).
 
