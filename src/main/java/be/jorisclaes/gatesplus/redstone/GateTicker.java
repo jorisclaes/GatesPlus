@@ -87,6 +87,8 @@ public final class GateTicker {
 			service.verify(level, gate, level.getGameTime(), false);
 			return;
 		}
+		// closed only up to a block in the opening: close further once that block is gone
+		if (!gate.isOpen()) service.extendClosed(level, gate);
 		if (!service.verify(level, gate, level.getGameTime(), false)) return;
 
 		boolean powered = isPowered(level, trigger, triggerState);
@@ -98,15 +100,12 @@ public final class GateTicker {
 			if (service.verify(level, gate, level.getGameTime(), true)) service.open(level, gate);
 			return;
 		}
-		// closing: never close on players/mobs/items, never overwrite blocks placed in the opening
+		// closing: items/vehicles (and with entity-in-gate = wait also players/mobs) stop the gate;
+		// a block in the opening never gets replaced, the gate closes up to it (see GateService.close)
 		if (service.entitiesInside(level, gate)) {
 			for (ServerPlayer p : level.players()) {
 				if (p.blockPosition().closerThan(trigger, 16)) Messages.actionBar(p, "gate.wants_to_close", gate.name());
 			}
-			return;
-		}
-		if (service.isObstructed(level, gate)) {
-			service.notifyBlocked(gate);
 			return;
 		}
 		service.close(level, gate);

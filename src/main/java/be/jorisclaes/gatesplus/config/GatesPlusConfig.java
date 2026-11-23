@@ -34,7 +34,17 @@ public record GatesPlusConfig(
 
 	public record Animation(boolean enabled, boolean allowPlayerToggle) {}
 
-	public record Redstone(int checkIntervalTicks, boolean allowInverted) {}
+	/** What a closing gate does with players and mobs in its opening. */
+	public enum EntityInGate {
+		/** Close anyway; the blocks are placed in them (vanilla suffocation). */
+		SUFFOCATE,
+		/** Close anyway; they are pushed out of the gate to the nearest side. */
+		PUSH,
+		/** Don't close until the opening is free. */
+		WAIT
+	}
+
+	public record Redstone(int checkIntervalTicks, boolean allowInverted, EntityInGate entityInGate) {}
 
 	public record Protection(boolean allowOpBreak) {}
 

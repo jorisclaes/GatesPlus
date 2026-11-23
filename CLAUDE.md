@@ -58,7 +58,8 @@ Gebruik de project-skill **`gatesplus-dev`** (`.claude/skills/gatesplus-dev/`) b
 **Werking**
 - **Eén trigger-blok per poort**, max `max-trigger-distance` van de poort. Standaard **dicht** zonder stroom; `inverted` instelbaar (per poort, uit te zetten in config).
 - Trigger vernietigd → poort gaat **open** (NO_TRIGGER). Blok teruggezet → werkt **meteen** weer.
-- Sluit nooit op spelers/mobs/items en nooit over blokken in de opening.
+- Spelers/mobs in de opening: config `redstone.entity-in-gate` = `suffocate` (standaard, sluit toch), `push` (uit de poort duwen) of `wait` (oud gedrag). Items/voertuigen houden de poort altijd tegen.
+- Blok in de opening: de poort sluit **tot aan dat blok** (per lijn in sluitrichting, nooit vervangen) en sluit verder zodra het weg is; vastgehouden posities zitten in geheugen (`GateService.heldBack`), na herstart herberekend.
 - Alleen poorten in **actieve (tickende) chunks** worden gecontroleerd (performantie).
 
 **Animatie**

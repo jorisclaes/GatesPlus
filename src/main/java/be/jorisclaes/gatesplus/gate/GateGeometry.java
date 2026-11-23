@@ -1,7 +1,10 @@
 package be.jorisclaes.gatesplus.gate;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.function.Predicate;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
@@ -38,6 +41,35 @@ public final class GateGeometry {
 			case VERTICAL -> p.getY() - g.minY();
 			case HORIZONTAL -> alongX(g) ? p.getX() - g.minX() : p.getZ() - g.minZ();
 		};
+	}
+
+	/** Position of row {@code row} on the line through {@code linePos} (the other coordinates). */
+	public static BlockPos onRow(Gate g, BlockPos linePos, int row) {
+		return switch (g.direction()) {
+			case VERTICAL -> new BlockPos(linePos.getX(), g.minY() + row, linePos.getZ());
+			case HORIZONTAL -> alongX(g) ? new BlockPos(g.minX() + row, linePos.getY(), linePos.getZ())
+					: new BlockPos(linePos.getX(), linePos.getY(), g.minZ() + row);
+		};
+	}
+
+	/**
+	 * Positions a closing gate leaves empty because of a block in its opening. Every line along the
+	 * closing direction fills in closing order (vertical: top down) and stops at the first
+	 * obstruction: that position and everything after it on the line is held back.
+	 */
+	public static Set<BlockPos> heldBack(Gate g, Predicate<BlockPos> obstruction) {
+		Set<BlockPos> held = new HashSet<>();
+		int rows = rowCount(g);
+		for (BlockPos p : positions(g)) {
+			if (row(g, p) != 0) continue; // one start position per line
+			boolean blocked = false;
+			for (int r = rows - 1; r >= 0; r--) {
+				BlockPos q = onRow(g, p, r);
+				if (!blocked && obstruction.test(q)) blocked = true;
+				if (blocked) held.add(q);
+			}
+		}
+		return held;
 	}
 
 	public static boolean allChunksLoaded(Level level, Gate g) {

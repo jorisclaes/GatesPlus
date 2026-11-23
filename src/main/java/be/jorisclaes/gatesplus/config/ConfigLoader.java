@@ -95,7 +95,8 @@ public final class ConfigLoader {
 						n.child("session").bool("marker-sets-corner", true)),
 				defaults,
 				new Animation(a.bool("enabled", true), a.bool("allow-player-toggle", true)),
-				new Redstone(r.integer("check-interval-ticks", 4, 1, 100), r.bool("allow-inverted", true)),
+				new Redstone(r.integer("check-interval-ticks", 4, 1, 100), r.bool("allow-inverted", true),
+						r.enumValue("entity-in-gate", GatesPlusConfig.EntityInGate.class, GatesPlusConfig.EntityInGate.SUFFOCATE)),
 				new Protection(n.child("protection").bool("allow-op-break", false)),
 				new Materials(m.bool("require-blocks", true), m.bool("creative-free", true),
 						m.bool("return-on-remove", true), m.integer("chest-threshold", 60, 0, Integer.MAX_VALUE)));

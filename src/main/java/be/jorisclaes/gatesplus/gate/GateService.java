@@ -57,6 +57,11 @@ public final class GateService {
 	/** Gates whose owner was already told the gate can't close (avoids chat spam). */
 	private final Set<Integer> blockedNotified = new HashSet<>();
 	private final Map<Integer, Long> lastVerify = new HashMap<>();
+	/**
+	 * Closed gates that could not close completely because of a block in the opening: the positions
+	 * left empty (see {@link GateGeometry#heldBack}). Not stored; recomputed after a restart.
+	 */
+	private final Map<Integer, Set<BlockPos>> heldBack = new HashMap<>();
 
 	public GateManager manager() { return manager; }
 	public GroupManager groups() { return groups; }
@@ -117,14 +122,6 @@ public final class GateService {
 		return manager.blockOf(gate).defaultBlockState();
 	}
 
-	/** Places the gate block on every air position. Never replaces anything else. */
-	public void placeBlocks(ServerLevel level, Gate gate) {
-		BlockState state = stateOf(gate);
-		for (BlockPos pos : GateGeometry.positions(gate)) {
-			if (level.getBlockState(pos).isAir()) level.setBlock(pos, state, Block.UPDATE_ALL);
-		}
-	}
-
 	/** Marker blocks inside the gate box disappear when the gate is built (they are free). */
 	public void clearMarkers(ServerLevel level, Gate gate) {
 		BlockState air = Blocks.AIR.defaultBlockState();
@@ -150,20 +147,83 @@ public final class GateService {
 		return missing;
 	}
 
-	/** Something non-air that is not the gate block sits inside an open gate. */
-	public boolean isObstructed(ServerLevel level, Gate gate) {
-		Block block = manager.blockOf(gate);
-		for (BlockPos pos : GateGeometry.positions(gate)) {
-			BlockState s = level.getBlockState(pos);
-			if (!s.isAir() && !s.is(block)) return true;
-		}
-		return false;
-	}
-
+	/**
+	 * Something in the opening that stops the gate from closing: items and vehicles always; players
+	 * and mobs only with redstone.entity-in-gate = wait.
+	 */
 	public boolean entitiesInside(ServerLevel level, Gate gate) {
 		AABB box = new AABB(gate.minX(), gate.minY(), gate.minZ(), gate.maxX() + 1, gate.maxY() + 1, gate.maxZ() + 1);
+		boolean livingBlocks = cfg().redstone().entityInGate() == GatesPlusConfig.EntityInGate.WAIT;
 		return !level.getEntities((Entity) null, box,
-				e -> e instanceof LivingEntity || e instanceof ItemEntity || e instanceof VehicleEntity).isEmpty();
+				e -> (livingBlocks && e instanceof LivingEntity) || e instanceof ItemEntity || e instanceof VehicleEntity).isEmpty();
+	}
+
+	/** Positions of the (open) gate that a block in the opening keeps empty when it closes. */
+	private Set<BlockPos> computeHeldBack(ServerLevel level, Gate gate) {
+		Block block = manager.blockOf(gate);
+		return GateGeometry.heldBack(gate, pos -> {
+			BlockState s = level.getBlockState(pos);
+			return !s.isAir() && !s.is(block);
+		});
+	}
+
+	private Set<BlockPos> heldBackOf(Gate gate) {
+		return heldBack.getOrDefault(gate.id(), Set.of());
+	}
+
+	/**
+	 * redstone.entity-in-gate = push: players and mobs in the given (just closed) positions are moved
+	 * out of the gate to the nearest side, across its thin axis.
+	 */
+	private void pushOut(ServerLevel level, Gate gate, List<BlockPos> positions) {
+		if (cfg().redstone().entityInGate() != GatesPlusConfig.EntityInGate.PUSH || positions.isEmpty()) return;
+		AABB box = new AABB(gate.minX(), gate.minY(), gate.minZ(), gate.maxX() + 1, gate.maxY() + 1, gate.maxZ() + 1);
+		boolean depthIsZ = GateGeometry.alongX(gate);
+		for (LivingEntity e : level.getEntitiesOfClass(LivingEntity.class, box, e -> e.isAlive() && !e.isSpectator())) {
+			AABB bb = e.getBoundingBox();
+			boolean hit = false;
+			for (BlockPos p : positions) {
+				if (bb.intersects(new AABB(p))) {
+					hit = true;
+					break;
+				}
+			}
+			if (!hit) continue;
+			double half = e.getBbWidth() / 2 + 0.05;
+			double c = depthIsZ ? e.getZ() : e.getX();
+			double lo = depthIsZ ? gate.minZ() : gate.minX();
+			double hi = (depthIsZ ? gate.maxZ() : gate.maxX()) + 1;
+			double target = c - lo <= hi - c ? lo - half : hi + half;
+			if (depthIsZ) e.teleportTo(e.getX(), e.getY(), target);
+			else e.teleportTo(target, e.getY(), e.getZ());
+		}
+	}
+
+	/**
+	 * A closed gate held back by a block: once that block is gone, the line closes further
+	 * (players/mobs are handled as configured). Called by the ticker.
+	 */
+	public void extendClosed(ServerLevel level, Gate gate) {
+		Set<BlockPos> held = heldBack.get(gate.id());
+		if (held == null || held.isEmpty() || gate.isOpen() || animator.isAnimating(gate)) return;
+		Set<BlockPos> now = computeHeldBack(level, gate);
+		List<BlockPos> free = new ArrayList<>();
+		for (BlockPos pos : held) if (!now.contains(pos) && level.getBlockState(pos).isAir()) free.add(pos);
+		if (free.isEmpty()) return;
+		boolean wait = cfg().redstone().entityInGate() == GatesPlusConfig.EntityInGate.WAIT;
+		Set<BlockPos> stillHeld = new HashSet<>(now);
+		List<BlockPos> place = new ArrayList<>();
+		for (BlockPos pos : free) {
+			boolean occupied = !level.getEntities((Entity) null, new AABB(pos),
+					e -> (wait && e instanceof LivingEntity) || e instanceof ItemEntity || e instanceof VehicleEntity).isEmpty();
+			if (occupied) stillHeld.add(pos);
+			else place.add(pos);
+		}
+		BlockState state = stateOf(gate);
+		pushOut(level, gate, place);
+		for (BlockPos pos : place) level.setBlock(pos, state, Block.UPDATE_ALL);
+		heldBack.put(gate.id(), stillHeld);
+		if (stillHeld.isEmpty()) blockedNotified.remove(gate.id());
 	}
 
 	private boolean shouldAnimate(ServerLevel level, Gate gate) {
@@ -175,6 +235,7 @@ public final class GateService {
 	/** Opens a functional gate (redstone). */
 	public void open(ServerLevel level, Gate gate) {
 		animator.cancel(gate);
+		heldBack.remove(gate.id());
 		clearBlocks(level, gate);
 		gate.setOpen(true);
 		if (shouldAnimate(level, gate)) animator.start(level, gate, stateOf(gate), true, level.getServer().getTickCount());
@@ -184,10 +245,19 @@ public final class GateService {
 	/** Closes a functional gate (redstone). The caller checked for entities and obstructions. */
 	public void close(ServerLevel level, Gate gate) {
 		animator.cancel(gate);
+		// a block in the opening: every line closes up to that block (never replacing it)
+		Set<BlockPos> held = computeHeldBack(level, gate);
+		heldBack.put(gate.id(), held);
 		gate.setOpen(false);
-		if (shouldAnimate(level, gate)) animator.start(level, gate, stateOf(gate), false, level.getServer().getTickCount());
-		else placeBlocks(level, gate);
-		blockedNotified.remove(gate.id());
+		if (shouldAnimate(level, gate)) {
+			animator.start(level, gate, stateOf(gate), false, level.getServer().getTickCount(), held);
+		} else {
+			List<BlockPos> rows = new ArrayList<>(GateGeometry.positions(gate));
+			rows.removeAll(held);
+			placeRow(level, gate, rows);
+		}
+		if (held.isEmpty()) blockedNotified.remove(gate.id());
+		else notifyBlocked(gate);
 		save(gate);
 	}
 
@@ -195,14 +265,19 @@ public final class GateService {
 	private void placeRow(ServerLevel level, Gate gate, List<BlockPos> positions) {
 		if (gate.isOpen() || gate.status() != GateStatus.OK || manager.byId(gate.id()) != gate) return;
 		BlockState state = stateOf(gate);
+		Set<BlockPos> held = heldBackOf(gate);
+		List<BlockPos> place = new ArrayList<>();
 		for (BlockPos pos : positions) {
-			if (level.getBlockState(pos).isAir()) level.setBlock(pos, state, Block.UPDATE_ALL);
+			if (!held.contains(pos) && level.getBlockState(pos).isAir()) place.add(pos);
 		}
+		pushOut(level, gate, place);
+		for (BlockPos pos : place) level.setBlock(pos, state, Block.UPDATE_ALL);
 	}
 
 	/** Instantly opens (no animation), e.g. when broken or before an edit is applied. */
 	public void forceOpen(ServerLevel level, Gate gate) {
 		animator.cancel(gate);
+		heldBack.remove(gate.id());
 		if (!gate.isOpen() && level != null) clearBlocks(level, gate);
 		gate.setOpen(true);
 	}
@@ -262,6 +337,13 @@ public final class GateService {
 		}
 		lastVerify.put(gate.id(), now);
 		int present = gate.totalCount() - countMissing(level, gate);
+		if (gate.status() == GateStatus.OK) {
+			// positions a block in the opening keeps empty are not missing (recomputed after a restart)
+			Block block = manager.blockOf(gate);
+			for (BlockPos pos : heldBack.computeIfAbsent(gate.id(), id -> computeHeldBack(level, gate))) {
+				if (!level.getBlockState(pos).is(block)) present++;
+			}
+		}
 		if (present < gate.placedCount()) {
 			markBroken(level, gate, gate.placedCount() - present);
 			return false;
@@ -297,7 +379,7 @@ public final class GateService {
 		}
 	}
 
-	/** An open gate that wants to close but can't; tells the owner once. */
+	/** A gate could only close up to a block in its opening; tells the owner once. */
 	public void notifyBlocked(Gate gate) {
 		if (blockedNotified.add(gate.id())) notifyGate(gate, "gate.blocked", gate.name());
 	}
@@ -526,6 +608,7 @@ public final class GateService {
 		cand.setOpen(rebuild ? false : gate.isOpen());
 
 		manager.update(gate, cand);
+		heldBack.remove(gate.id());
 		manager.refreshActive(level, gate);
 		blockedNotified.remove(gate.id());
 		clearMarkers(level, gate);
@@ -552,6 +635,7 @@ public final class GateService {
 			if (remover != null) Materials.refund(level, remover, manager.blockOf(gate), gate.paidCount());
 		}
 		manager.remove(gate);
+		heldBack.remove(gate.id());
 		locked.remove(gate.id());
 		blockedNotified.remove(gate.id());
 		lastVerify.remove(gate.id());
@@ -560,6 +644,7 @@ public final class GateService {
 	}
 
 	public void repair(ServerPlayer player, Gate gate) {
+		heldBack.remove(gate.id());
 		if (gate.missingCount() == 0) {
 			if (gate.status() == GateStatus.NO_TRIGGER) Messages.send(player, "repair.need_trigger", gate.name());
 			else Messages.send(player, "repair.not_needed", gate.name());

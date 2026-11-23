@@ -163,7 +163,12 @@ Elke poort heeft een **id** dat uniek is op de hele server (`#12`) en een **naam
 - **Vorm.** Elke rechthoekige doos: een muur, een vloer (valluik) of een dik blok, binnen de limieten uit de config.
 - **Trigger-blok.** Precies één per poort, maximaal `max-trigger-distance` blokken (standaard 5) van de poort. Het mag een gewoon blok zijn waar je een hendel op zet, of zelf een hendel, knop of drukplaat.
 - **Standaard dicht.** Zonder stroom op de trigger is de poort dicht; met stroom gaat ze open (of omgekeerd met `/gp set redstone inverted`).
-- **Niemand wordt ingesloten.** Staat er een speler, dier of item in de opening, dan wacht de poort met sluiten. Ze sluit ook niet over blokken die iemand in de opening heeft gezet; de eigenaar krijgt dan één melding.
+- **Spelers en mobs in de opening.** Wat er gebeurt, kiest de serverbeheerder met `redstone.entity-in-gate`:
+  - `suffocate` (standaard): de poort sluit toch; wie erin staat, stikt zoals in vanilla.
+  - `push`: de poort sluit toch; wie erin staat, wordt naar de dichtste kant uit de poort geduwd.
+  - `wait`: de poort wacht met sluiten tot de opening vrij is.
+- **Items en voertuigen** in de opening houden de poort altijd tegen.
+- **Een blok in de opening.** De poort sluit **tot aan dat blok** (verticaal: van boven tot op het blok; horizontaal: tot ertegen) en vervangt het nooit. Wordt het blok weggehaald, dan sluit de poort vanzelf verder. De eigenaar krijgt één melding.
 - **Animatie.** Rij per rij: de volgende rij begint pas als de vorige klaar is.
   - Openen (verticaal): van onder naar boven, elke rij trekt zich omhoog terug.
   - Sluiten (verticaal): van boven naar beneden, iets trager dan openen; elke rij wordt een echt blok zodra ze klaar is.
@@ -285,6 +290,7 @@ animation:
 redstone:
   check-interval-ticks: 4
   allow-inverted: true
+  entity-in-gate: suffocate  # suffocate | push | wait (spelers/mobs in de opening bij sluiten)
 
 protection:
   allow-op-break: false
@@ -318,7 +324,7 @@ Je bouwde de poort in creative. Met `creative-free: true` is dat gratis en dus k
 De poort hoort bij een andere speler (bijvoorbeeld een andere account). Admins zien alle poorten met `/gp list all`.
 
 **De poort gaat niet dicht.**
-Er staat iets in de opening (speler, dier, item of een blok), de poort is kapot/onvolledig (naam is rood in `/gp list`), of de trigger krijgt nog stroom.
+Er ligt een item of staat een voertuig in de opening (of een speler/dier bij `entity-in-gate: wait`), de poort is kapot/onvolledig (naam is rood in `/gp list`), of de trigger krijgt nog stroom.
 
 **Ik kan geen poort bouwen: "staat in de weg".**
 Poorten worden alleen in lucht gebouwd. Haal de rood gemarkeerde blokken weg of gebruik markerblokken voor hoeken in de lucht.

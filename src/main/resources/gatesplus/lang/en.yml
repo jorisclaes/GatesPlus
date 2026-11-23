@@ -120,7 +120,7 @@ gate:
   incomplete: "&eGate {0}: {1} / {2} blocks. &7It only works once it is complete: /gp repair {0}"
   broken: "&cGate {0} is broken and no longer works: {1} / {2} blocks – /gp repair {0}"
   no_trigger: "&cThe trigger block of gate {0} was destroyed; the gate is open. Put a block back or choose a new one with /gp edit {0}."
-  blocked: "&eGate {0} can't close: something is in the opening."
+  blocked: "&eGate {0} could not close completely: there is a block in the opening."
   trigger_restored: "&aThe trigger block of gate {0} is back; the gate works again."
   wants_to_close: "&eGate {0} wants to close – step out of the opening!"
 

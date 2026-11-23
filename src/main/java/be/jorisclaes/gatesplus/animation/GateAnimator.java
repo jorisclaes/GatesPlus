@@ -146,6 +146,11 @@ public final class GateAnimator {
 	 * @param state the gate block state to show
 	 */
 	public void start(ServerLevel level, Gate gate, BlockState state, boolean opening, long now) {
+		start(level, gate, state, opening, now, Set.of());
+	}
+
+	/** @param skip positions that get no display (closing: held back by a block in the opening) */
+	public void start(ServerLevel level, Gate gate, BlockState state, boolean opening, long now, Set<BlockPos> skip) {
 		cancel(gate);
 		int rowCount = GateGeometry.rowCount(gate);
 		// first row starts one tick after spawning, so clients have the start state first
@@ -155,6 +160,7 @@ public final class GateAnimator {
 		Animation anim = new Animation(gate, level, opening, state, now + 1, duration, duration);
 		for (int i = 0; i < rowCount; i++) anim.rows.add(new Row());
 		for (BlockPos pos : GateGeometry.positions(gate)) {
+			if (skip.contains(pos)) continue;
 			int row = GateGeometry.row(gate, pos);
 			// opening: first row first; closing: last row first (vertical: top row first, going down)
 			anim.rows.get(opening ? row : rowCount - 1 - row).positions.add(pos);

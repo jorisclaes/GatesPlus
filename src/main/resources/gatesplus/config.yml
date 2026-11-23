@@ -88,6 +88,13 @@ redstone:
   check-interval-ticks: 4
   # false = omgekeerde redstone uitgeschakeld voor alle poorten
   allow-inverted: true
+  # Spelers en mobs in de opening als de poort sluit:
+  #   suffocate = poort sluit toch, blokken komen in hen (stikken zoals in vanilla)
+  #   push      = poort sluit toch, ze worden naar de dichtste kant uit de poort geduwd
+  #   wait      = poort wacht tot de opening vrij is
+  # Items en voertuigen houden de poort altijd tegen. Een geplaatst blok in de opening:
+  # de poort sluit tot aan dat blok en zakt verder zodra het weg is.
+  entity-in-gate: suffocate
 
 protection:
   # admins (permissie gatesplus.admin.break) mogen onbreekbare poorten breken in creative
