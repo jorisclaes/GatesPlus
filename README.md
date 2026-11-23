@@ -44,7 +44,7 @@ Bouw poorten van (bijna) elk blok. Een poort gaat **vloeiend open en dicht met r
 > |---|---|---|
 > | Selectie | doorzichtige kaders (goud/rood/groen/blauw) | nepblokken die alleen jij ziet (goud = hoek 1, redstone = hoek 2, groen glas = randen, diamant = trigger) |
 > | Info-venster / dev-paneel | HUD-venster rechtsboven | scorebord-zijbalk rechts |
-> | Markerblokken | gele/rode beton met een zwevend "1"/"2" (of eigen blokken, zie hieronder) | idem |
+> | Markerblokken | de eigen markerblokken met "1"/"2" op de textuur (de server zelf houdt beton) | gele/rode beton met een zwevend "1"/"2" |
 >
 > Zet een serverbeheerder `session.custom-marker-blocks: true`, dan gebruikt GatesPlus eigen markerblokken met textuur; dan is de mod **wel verplicht bij elke speler** (anders kunnen ze niet joinen).
 
@@ -101,6 +101,7 @@ Je krijgt er twee: een **gele "1"** (linksboven, hoek 1) en een **rode "2"** (re
 - Markerblokken krijg je **alleen tijdens een sessie** (`/gp create` of `/gp edit`).
 - Markers ín de poort verdwijnen vanzelf als de poort gebouwd wordt.
 - Als de sessie stopt, verdwijnen ongebruikte markers uit je inventory en geplaatste markers uit de wereld.
+- Markers kunnen niet verschoven worden met (sticky) pistons en overleven explosies.
 - Markers breken in één klik en laten niets vallen. **Sla je een marker kapot, dan verdwijnt ook die hoek uit je selectie** (en het trigger-blok, zoals bij rechterklik, want zonder volledige poort heeft dat geen zin).
 
 ### De bijl en markers zijn vergrendeld

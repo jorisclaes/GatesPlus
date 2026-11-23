@@ -47,8 +47,9 @@ public final class MarkerLabels {
 		d.gatesplus$setBrightnessOverride(Brightness.FULL_BRIGHT);
 		d.gatesplus$setTransformation(new Transformation(new Vector3f(), new Quaternionf(),
 				new Vector3f(2, 2, 2), new Quaternionf()));
-		level.addFreshEntity(label);
+		// known before it is added: ENTITY_LOAD fires during addFreshEntity and discards unknown labels
 		OWN.add(label.getUUID());
+		level.addFreshEntity(label);
 		return label.getUUID();
 	}
 
@@ -57,6 +58,15 @@ public final class MarkerLabels {
 		OWN.remove(id);
 		Entity e = level.getEntity(id);
 		if (e != null) e.discard();
+	}
+
+	/**
+	 * Players with the client mod see the marker block itself with its number (see
+	 * {@code MarkersPayload}), so the label is not sent to them.
+	 */
+	public static boolean hideFrom(Entity entity, net.minecraft.server.level.ServerPlayer player) {
+		return !OWN.isEmpty() && OWN.contains(entity.getUUID())
+				&& be.jorisclaes.gatesplus.network.Network.hasClientMod(player);
 	}
 
 	/** True for a label that no longer belongs to a session (to be discarded on load). */

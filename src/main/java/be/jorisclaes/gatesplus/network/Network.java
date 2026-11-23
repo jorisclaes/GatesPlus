@@ -11,6 +11,7 @@ public final class Network {
 	public static void register() {
 		PayloadTypeRegistry.clientboundPlay().register(SelectionSyncPayload.TYPE, SelectionSyncPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(PanelPayload.TYPE, PanelPayload.CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(MarkersPayload.TYPE, MarkersPayload.CODEC);
 	}
 
 	/** True when the player runs the GatesPlus client mod. */

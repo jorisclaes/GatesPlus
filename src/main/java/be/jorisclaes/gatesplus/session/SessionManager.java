@@ -28,6 +28,7 @@ import be.jorisclaes.gatesplus.gate.GateService;
 import be.jorisclaes.gatesplus.gate.InfoPanel;
 import be.jorisclaes.gatesplus.marker.MarkerBlocks;
 import be.jorisclaes.gatesplus.marker.MarkerLabels;
+import be.jorisclaes.gatesplus.network.MarkersPayload;
 import be.jorisclaes.gatesplus.network.Network;
 import be.jorisclaes.gatesplus.network.PanelPayload;
 import be.jorisclaes.gatesplus.network.SelectionSyncPayload;
@@ -119,10 +120,33 @@ public final class SessionManager {
 	 * Marker blocks only exist during a session: unused ones leave the inventory, placed ones the world
 	 * (markers that ended up inside a gate were already replaced by it).
 	 */
-	private static void removeMarkerBlocks(ServerPlayer player, CreateSession s) {
+	private void removeMarkerBlocks(ServerPlayer player, CreateSession s) {
 		MarkerBlocks.removeItems(player);
+		boolean had = !s.placedMarkers().isEmpty();
 		for (CreateSession.PlacedMarker m : s.placedMarkers()) takeBack(m);
 		s.placedMarkers().clear();
+		if (had) broadcastMarkers();
+	}
+
+	/** All placed vanilla markers, for the client mod (it shows them as textured marker blocks). */
+	public MarkersPayload markersPayload() {
+		if (MarkerBlocks.custom()) return MarkersPayload.EMPTY;
+		List<MarkersPayload.Entry> list = new ArrayList<>();
+		for (CreateSession s : sessions.values()) {
+			for (CreateSession.PlacedMarker m : s.placedMarkers()) {
+				list.add(new MarkersPayload.Entry(GateManager.dimensionId(m.level()), m.pos(),
+						m.corner() == CreateSession.Point.CORNER1 ? 1 : 2));
+			}
+		}
+		return new MarkersPayload(list);
+	}
+
+	/** Sends the placed markers to every player with the client mod. */
+	public void broadcastMarkers() {
+		MinecraftServer server = GatesPlus.get().server();
+		if (server == null || MarkerBlocks.custom()) return;
+		MarkersPayload payload = markersPayload();
+		for (ServerPlayer p : server.getPlayerList().getPlayers()) Network.send(p, payload);
 	}
 
 	/**
@@ -163,6 +187,7 @@ public final class SessionManager {
 			takeBack(m);
 			it.remove();
 		}
+		broadcastMarkers();
 	}
 
 	/**
@@ -175,6 +200,7 @@ public final class SessionManager {
 			CreateSession.PlacedMarker m = s.removePlacedMarkerAt(level, pos);
 			if (m == null) continue;
 			MarkerLabels.remove(level, m.label());
+			broadcastMarkers();
 			CreateSession.Point corner = m.corner();
 			if (m.replaced() != null && level.getBlockState(pos).isAir()) {
 				level.setBlock(pos, m.replaced(), net.minecraft.world.level.block.Block.UPDATE_ALL);
@@ -243,6 +269,7 @@ public final class SessionManager {
 		CreateSession.PlacedMarker old = s.putPlacedMarker(corner, level, pos, replaced, label);
 		if (old != null && !old.pos().equals(pos)) takeBack(old);
 		else if (old != null) MarkerLabels.remove(old.level(), old.label());
+		broadcastMarkers();
 		s.touch();
 
 		// config session.marker-sets-corner: false = the marker only marks, the wand sets the corner

@@ -1,5 +1,6 @@
 package be.jorisclaes.gatesplus.client;
 
+import be.jorisclaes.gatesplus.network.MarkersPayload;
 import be.jorisclaes.gatesplus.network.PanelPayload;
 import be.jorisclaes.gatesplus.network.SelectionSyncPayload;
 
@@ -8,6 +9,7 @@ public final class ClientState {
 	static volatile SelectionSyncPayload selection = SelectionSyncPayload.EMPTY;
 	static volatile PanelPayload infoPanel = PanelPayload.hide(PanelPayload.INFO);
 	static volatile PanelPayload devPanel = PanelPayload.hide(PanelPayload.DEVSTATS);
+	static volatile MarkersPayload markers = MarkersPayload.EMPTY;
 
 	private ClientState() {}
 
@@ -15,5 +17,6 @@ public final class ClientState {
 		selection = SelectionSyncPayload.EMPTY;
 		infoPanel = PanelPayload.hide(PanelPayload.INFO);
 		devPanel = PanelPayload.hide(PanelPayload.DEVSTATS);
+		markers = MarkersPayload.EMPTY;
 	}
 }

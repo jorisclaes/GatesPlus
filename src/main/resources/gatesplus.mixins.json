@@ -6,6 +6,7 @@
 		"AbstractContainerMenuMixin",
 		"BlockDisplayAccessor",
 		"DisplayAccessor",
+		"EntityMixin",
 		"FallingBlockMixin",
 		"FireBlockMixin",
 		"PistonBaseBlockMixin",

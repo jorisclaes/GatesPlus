@@ -89,6 +89,7 @@ public class GatesPlus implements ModInitializer {
 				Wand.removeAll(handler.player);
 				MarkerBlocks.removeItems(handler.player);
 			}
+			be.jorisclaes.gatesplus.network.Network.send(handler.player, gates.sessions().markersPayload());
 		});
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, srv) -> {
 			gates.sessions().onDisconnect(handler.player);
@@ -100,6 +101,7 @@ public class GatesPlus implements ModInitializer {
 	private void onTick(MinecraftServer server) {
 		if (storage == null) return;
 		gates.animator().tick(server.getTickCount());
+		Protection.tick(server);
 		ticker.tick(server);
 		if (server.getTickCount() % 20 == 0) {
 			gates.returnChests().tick(server);

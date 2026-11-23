@@ -85,9 +85,17 @@ public final class MarkerBlocks {
 
 	/** The block a marker for this corner is in the world. */
 	public static Block blockFor(CreateSession.Point corner) {
-		boolean one = corner == CreateSession.Point.CORNER1;
-		if (custom) return one ? topLeft : bottomRight;
-		return one ? Blocks.CONCRETE.yellow() : Blocks.CONCRETE.red();
+		return custom ? customBlockFor(corner) : vanillaBlockFor(corner);
+	}
+
+	/** The vanilla marker block (yellow / red concrete). */
+	public static Block vanillaBlockFor(CreateSession.Point corner) {
+		return corner == CreateSession.Point.CORNER1 ? Blocks.CONCRETE.yellow() : Blocks.CONCRETE.red();
+	}
+
+	/** The own textured marker block, or null when it is not registered (dedicated server, vanilla mode). */
+	public static Block customBlockFor(CreateSession.Point corner) {
+		return corner == CreateSession.Point.CORNER1 ? topLeft : bottomRight;
 	}
 
 	/** A fresh marker item for this corner. */

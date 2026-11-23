@@ -33,6 +33,18 @@ public final class Protection {
 	}
 
 	public static void register() {
+		// markers break with one click (like the old instabreak blocks) and drop nothing; doing it on
+		// the attack also keeps the client mod (which shows them as instabreak blocks) in sync
+		net.fabricmc.fabric.api.event.player.AttackBlockCallback.EVENT.register((player, level, hand, pos, direction) -> {
+			if (!(player instanceof ServerPlayer sp) || !(level instanceof ServerLevel sl)) return net.minecraft.world.InteractionResult.PASS;
+			if (Wand.isWand(sp.getMainHandItem()) || sp.isSpectator()) return net.minecraft.world.InteractionResult.PASS;
+			GateService s = gates();
+			if (s == null || s.sessions().markerAt(level, pos) == null) return net.minecraft.world.InteractionResult.PASS;
+			level.removeBlock(pos, false);
+			s.sessions().onMarkerBroken(sl, pos);
+			return net.minecraft.world.InteractionResult.SUCCESS;
+		});
+
 		PlayerBlockBreakEvents.BEFORE.register((level, player, pos, state, be) -> {
 			if (!(player instanceof ServerPlayer sp) || !(level instanceof ServerLevel)) return true;
 			if (Wand.isWand(sp.getMainHandItem())) return false;
@@ -121,10 +133,16 @@ public final class Protection {
 	/** Pistons must not move indestructible gate blocks. */
 	public static boolean preventPush(Level level, BlockPos pos) {
 		GateService s = gates();
-		if (s != null && level instanceof ServerLevel && s.sessions().markerAt(level, pos) != null) return true;
+		if (s != null && level instanceof ServerLevel sl && s.sessions().markerAt(level, pos) != null) {
+			resyncLater(sl, pos);
+			return true;
+		}
 		Gate g = gateBlock(level, pos);
 		if (g == null) return false;
-		if (g.indestructible()) return true;
+		if (g.indestructible()) {
+			resyncLater((ServerLevel) level, pos);
+			return true;
+		}
 		scheduleVerify((ServerLevel) level, Set.of(g));
 		return false;
 	}
@@ -132,6 +150,44 @@ public final class Protection {
 	/** Falling blocks (sand, gravel) that are part of a gate stay in place. */
 	public static boolean lockFalling(Level level, BlockPos pos) {
 		return gateBlock(level, pos) != null;
+	}
+
+	/**
+	 * A sticky piston retracts on the client too (block event), and the client does not know the
+	 * block is protected: it pulls it along. A few ticks later the real blocks around it are sent
+	 * again, so the client shows what the server has.
+	 */
+	private static final int RESYNC_DELAY_TICKS = 4;
+	private static final java.util.Map<ServerLevel, java.util.Map<BlockPos, Long>> RESYNC = new java.util.HashMap<>();
+
+	private static void resyncLater(ServerLevel level, BlockPos pos) {
+		RESYNC.computeIfAbsent(level, l -> new java.util.HashMap<>())
+				.putIfAbsent(pos.immutable(), level.getGameTime() + RESYNC_DELAY_TICKS);
+	}
+
+	/** Every tick: sends due positions (and their neighbours, where a pulled block would land). */
+	public static void tick(net.minecraft.server.MinecraftServer server) {
+		if (RESYNC.isEmpty()) return;
+		var levels = RESYNC.entrySet().iterator();
+		while (levels.hasNext()) {
+			var e = levels.next();
+			ServerLevel level = e.getKey();
+			long now = level.getGameTime();
+			var it = e.getValue().entrySet().iterator();
+			while (it.hasNext()) {
+				var p = it.next();
+				if (p.getValue() > now) continue;
+				it.remove();
+				BlockPos pos = p.getKey();
+				if (!level.isLoaded(pos)) continue;
+				level.getChunkSource().blockChanged(pos);
+				for (net.minecraft.core.Direction d : net.minecraft.core.Direction.values()) {
+					BlockPos n = pos.relative(d);
+					if (level.isLoaded(n)) level.getChunkSource().blockChanged(n);
+				}
+			}
+			if (e.getValue().isEmpty()) levels.remove();
+		}
 	}
 
 	private static void scheduleVerify(ServerLevel level, Set<Gate> gates) {
