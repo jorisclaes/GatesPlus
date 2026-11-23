@@ -138,6 +138,24 @@ public final class MarkerBlocks {
 		return cornerOfItem(stack) != null;
 	}
 
+	/** True when the player has a marker item for this corner in the inventory or on the cursor. */
+	public static boolean hasItem(ServerPlayer player, CreateSession.Point corner) {
+		var inv = player.getInventory();
+		for (int i = 0; i < inv.getContainerSize(); i++) {
+			if (cornerOfItem(inv.getItem(i)) == corner) return true;
+		}
+		return cornerOfItem(player.containerMenu.getCarried()) == corner;
+	}
+
+	/**
+	 * A placed marker was broken: its item returns to the inventory (never as a drop), unless the
+	 * player still has one for that corner (creative does not use up placed blocks).
+	 */
+	public static void giveBack(ServerPlayer player, CreateSession.Point corner) {
+		if (corner == null || hasItem(player, corner)) return;
+		if (player.getInventory().add(create(player, corner))) player.containerMenu.broadcastChanges();
+	}
+
 	/** Removes every marker item from the inventory and the cursor (end of a session). */
 	public static void removeItems(ServerPlayer player) {
 		var inv = player.getInventory();

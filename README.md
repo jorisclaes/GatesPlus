@@ -102,7 +102,7 @@ Je krijgt er twee: een **gele "1"** (linksboven, hoek 1) en een **rode "2"** (re
 - Markers ín de poort verdwijnen vanzelf als de poort gebouwd wordt.
 - Als de sessie stopt, verdwijnen ongebruikte markers uit je inventory en geplaatste markers uit de wereld.
 - Markers kunnen niet verschoven worden met (sticky) pistons en overleven explosies.
-- Markers breken in één klik en laten niets vallen. **Sla je een marker kapot, dan verdwijnt ook die hoek uit je selectie** (en het trigger-blok, zoals bij rechterklik, want zonder volledige poort heeft dat geen zin).
+- Markers breken in één klik en laten niets vallen: het markeritem komt **terug in je inventory** (tenzij je er van die hoek nog een hebt). **Sla je een marker kapot, dan verdwijnt ook die hoek uit je selectie** (en het trigger-blok, zoals bij rechterklik, want zonder volledige poort heeft dat geen zin).
 
 ### De bijl en markers zijn vergrendeld
 

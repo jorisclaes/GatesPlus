@@ -205,10 +205,12 @@ public final class SessionManager {
 			if (m.replaced() != null && level.getBlockState(pos).isAir()) {
 				level.setBlock(pos, m.replaced(), net.minecraft.world.level.block.Block.UPDATE_ALL);
 			}
+			ServerPlayer owner = server.getPlayerList().getPlayer(s.player());
+			// the marker item goes back to the session owner (no drop), unless they still have one
+			if (owner != null) MarkerBlocks.giveBack(owner, corner);
 			BlockPos selected = corner == CreateSession.Point.CORNER1 ? s.corner1()
 					: corner == CreateSession.Point.CORNER2 ? s.corner2() : null;
 			if (!pos.equals(selected) || !s.clearCorner(corner)) continue;
-			ServerPlayer owner = server.getPlayerList().getPlayer(s.player());
 			if (owner == null) continue;
 			invalid.remove(owner.getUUID());
 			Messages.actionBar(owner, "wand.undo." + corner.name().toLowerCase(java.util.Locale.ROOT));
