@@ -28,6 +28,7 @@ class ConfigLoaderTest {
 		assertEquals("minecraft:dirt", cfg.defaults().block());
 		assertTrue(cfg.allowedBlocks().contains("minecraft:sand"));
 		assertTrue(cfg.session().markerSetsCorner());
+		assertEquals("en", cfg.language());
 	}
 
 	@Test
@@ -48,6 +49,7 @@ class ConfigLoaderTest {
 		assertTrue(cfg.animation().enabled());
 		assertEquals("vertical", cfg.defaults().direction());
 		assertEquals(5, cfg.limits().maxGatesPerPlayer());
+		assertEquals("en", cfg.language()); // missing language = English
 		assertTrue(cfg.session().markerSetsCorner());
 		assertEquals(3, warnings.size(), warnings.toString());
 	}

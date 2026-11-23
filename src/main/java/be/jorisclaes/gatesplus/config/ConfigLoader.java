@@ -106,10 +106,10 @@ public final class ConfigLoader {
 		Node r = n.child("redstone");
 		Node m = n.child("materials");
 
-		String language = n.str("language", "nl").toLowerCase(Locale.ROOT);
+		String language = n.str("language", "en").toLowerCase(Locale.ROOT);
 		if (!List.of("nl", "en", "auto").contains(language)) {
 			warnings.add("language moet nl, en of auto zijn, kreeg '" + language + "'");
-			language = "nl";
+			language = "en";
 		}
 
 		return new GatesPlusConfig(

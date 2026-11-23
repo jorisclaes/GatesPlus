@@ -3,8 +3,8 @@
 #  Na aanpassen: /gp reload (opslag-instellingen vereisen een herstart)
 # ============================================================
 
-# Taal van de meldingen: nl | en | auto (volgt de taal van de speler)
-language: nl
+# Taal van de meldingen: en | nl | auto (volgt de taal van de speler)
+language: en
 
 storage:
   # sqlite | mysql

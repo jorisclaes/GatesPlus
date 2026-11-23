@@ -91,5 +91,5 @@ Gebruik de project-skill **`gatesplus-dev`** (`.claude/skills/gatesplus-dev/`) b
 - `/gp devstats` = dev-paneel + dev-modus (extra meldingen).
 
 **Overig**
-- Config in YAML, opslag SQLite of MySQL met schemaversie.
+- Config in YAML, opslag SQLite of MySQL met schemaversie. Standaardtaal van de meldingen is **Engels** (`language: en`); `nl` en `auto` instelbaar.
 - `runClient` gebruikt een vaste naam `Dev` en `-Xmx5G` (gekozen door de gebruiker, 15 GB RAM in de pc).
