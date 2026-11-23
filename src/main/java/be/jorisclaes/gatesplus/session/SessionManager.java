@@ -43,6 +43,8 @@ public final class SessionManager {
 	/** Fallback markers (fake blocks) sent to players without the client mod, to restore later. */
 	private final Map<UUID, Set<BlockPos>> fakeBlocks = new HashMap<>();
 	private final Map<UUID, List<BlockPos>> invalid = new HashMap<>();
+	/** Players without the client mod whose fake blocks must be sent again next tick. */
+	private final Set<UUID> resendFake = new HashSet<>();
 
 	public SessionManager(GateService service) {
 		this.service = service;
@@ -442,6 +444,26 @@ public final class SessionManager {
 			sendFakeMarkers(player, s);
 		}
 		Panels.show(player, InfoPanel.forSession(player, s)); // HUD panel or sidebar
+	}
+
+	/**
+	 * After a wand left-click Fabric sends the real block at the clicked position (air for a fake
+	 * corner / edge block), which wipes a fake block the player clicked or (creative) kept breaking.
+	 * The fake blocks are sent again on the next tick, after that update.
+	 */
+	public void resendFakeLater(ServerPlayer player) {
+		if (!Network.hasClientMod(player)) resendFake.add(player.getUUID());
+	}
+
+	/** Every tick: send the fake blocks again for players queued by {@link #resendFakeLater}. */
+	public void tickFakeResend(MinecraftServer server) {
+		if (resendFake.isEmpty()) return;
+		for (UUID id : resendFake) {
+			ServerPlayer p = server.getPlayerList().getPlayer(id);
+			CreateSession s = p == null ? null : sessions.get(id);
+			if (s != null) sendFakeMarkers(p, s);
+		}
+		resendFake.clear();
 	}
 
 	private void clearMarkers(ServerPlayer player) {

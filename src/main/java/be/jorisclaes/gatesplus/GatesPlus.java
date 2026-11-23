@@ -103,6 +103,7 @@ public class GatesPlus implements ModInitializer {
 		gates.animator().tick(server.getTickCount());
 		Protection.tick(server);
 		ticker.tick(server);
+		gates.sessions().tickFakeResend(server);
 		if (server.getTickCount() % 20 == 0) {
 			gates.returnChests().tick(server);
 			gates.sessions().tickTimeouts(server);

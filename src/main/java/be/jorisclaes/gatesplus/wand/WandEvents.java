@@ -21,7 +21,11 @@ public final class WandEvents {
 	public static void register() {
 		AttackBlockCallback.EVENT.register((player, level, hand, pos, direction) -> {
 			if (hand != InteractionHand.MAIN_HAND || !Wand.isWand(player.getItemInHand(hand))) return InteractionResult.PASS;
-			if (player instanceof ServerPlayer sp) GatesPlus.get().gates().sessions().onLeftClick(sp, pos, direction);
+			if (player instanceof ServerPlayer sp) {
+				var sessions = GatesPlus.get().gates().sessions();
+				sessions.onLeftClick(sp, pos, direction);
+				sessions.resendFakeLater(sp); // Fabric now resends the clicked block, maybe over a fake one
+			}
 			return InteractionResult.SUCCESS;
 		});
 
