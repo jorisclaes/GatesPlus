@@ -227,7 +227,7 @@ Met een groep deel je poorten met andere spelers.
 
 Tijdens `/gp create` en `/gp edit` toont een **venster rechtsboven** (zonder client-mod: in de **scorebord-zijbalk**) alles over de poort waaraan je werkt: naam en id, blok, trigger-blok, hoeken en grootte, blokken (`12 / 16`, en hoeveel je bij je hebt), status, bescherming, animatie, redstone en groep/eigenaar. Alles wordt meteen bijgewerkt.
 
-**Dev-modus** (`/gp devstats`, admin) toont een tweede venster (zonder client-mod: onderaan in de zijbalk, max. 15 regels) met live serverstatistieken: aantal poorten (geladen/actief/kapot), tijd per tick, controles per seconde, animaties, sessies, database-wachtrij en fouten. In dev-modus krijg je ook extra meldingen, zoals "poort is onbreekbaar" en "poort is kapot". Nogmaals `/gp devstats` zet het weer uit.
+**Dev-modus** (`/gp devstats`, admin) toont een tweede venster (zonder client-mod: in de zijbalk, maar alleen als je geen create/edit-sessie hebt – tijdens een sessie toont de zijbalk het info-venster; de cijfers staan ook in de chat bij `/gp devstats`) met live serverstatistieken: aantal poorten (geladen/actief/kapot), tijd per tick, controles per seconde, animaties, sessies, database-wachtrij en fouten. In dev-modus krijg je ook extra meldingen, zoals "poort is onbreekbaar" en "poort is kapot". Nogmaals `/gp devstats` zet het weer uit.
 
 ## Rechten (permissions)
 

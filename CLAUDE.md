@@ -87,7 +87,7 @@ Gebruik de project-skill **`gatesplus-dev`** (`.claude/skills/gatesplus-dev/`) b
 - Rechten via fabric-permissions-api (LuckPerms); nodes in `util/Perms.java` en de README-tabel.
 
 **Info en dev**
-- Zonder client-mod: selectie als nepblokken, info-venster en dev-paneel in de **scorebord-zijbalk** (alleen pakketten naar die speler, `util/Panels`).
+- Zonder client-mod: selectie als nepblokken, info-venster en dev-paneel in de **scorebord-zijbalk** (alleen pakketten naar die speler, `util/Panels`); de zijbalk past maar 15 regels, dus tijdens een sessie toont ze alleen het info-venster, anders het dev-paneel.
 - Info-venster rechtsboven tijdens create/edit (naam/id, blok, trigger, hoeken, blokken x / y, status, bescherming, animatie, redstone, groep).
 - `/gp devstats` = dev-paneel + dev-modus (extra meldingen).
 

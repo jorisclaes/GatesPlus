@@ -25,7 +25,7 @@ import be.jorisclaes.gatesplus.network.PanelPayload;
 /**
  * The info panel and the dev panel. With the client mod they are HUD panels; without it they are
  * shown in the scoreboard sidebar of that one player (packets only, the server scoreboard is not
- * touched). Both panels share the sidebar: info first, dev stats below.
+ * touched). The sidebar shows one panel: the info panel during a session, else the dev panel.
  */
 public final class Panels {
 	private static final String OBJECTIVE = "gatesplus_panel";
@@ -74,16 +74,12 @@ public final class Panels {
 			SIDEBARS.remove(player.getUUID());
 			return;
 		}
-		String title = sb.info != null ? sb.info.title() : sb.dev.title();
+		// both panels don't fit in the 15 sidebar lines: during a session the info panel takes the
+		// sidebar, otherwise the dev panel (its numbers are also printed in chat by /gp devstats)
+		PanelPayload shown = sb.info != null ? sb.info : sb.dev;
+		String title = shown.title();
 		List<String> lines = new ArrayList<>();
-		if (sb.info != null) for (String row : sb.info.rows()) lines.add(format(row));
-		if (sb.dev != null) {
-			if (sb.info != null) {
-				lines.add("");
-				lines.add(sb.dev.title());
-			}
-			for (String row : sb.dev.rows()) lines.add(format(row));
-		}
+		for (String row : shown.rows()) lines.add(format(row));
 		if (lines.size() > MAX_LINES) lines = new ArrayList<>(lines.subList(0, MAX_LINES));
 
 		Objective objective = objective(title);
