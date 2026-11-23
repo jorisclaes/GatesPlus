@@ -65,6 +65,9 @@ non-full-block-whitelist:
 session:
   # sessie stopt automatisch na zoveel minuten zonder activiteit
   timeout-minutes: 10
+  # true = een markerblok plaatsen zet meteen zijn hoek (zoals klikken met de bijl)
+  # false = markers zijn alleen een hulpmiddel; klik erop met de bijl om de hoek te zetten
+  marker-sets-corner: true
 
 # Standaardwaarden voor een nieuwe poort (worden aan de poort zelf gekoppeld)
 defaults:

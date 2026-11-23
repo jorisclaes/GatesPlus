@@ -27,6 +27,7 @@ class ConfigLoaderTest {
 		assertEquals(60, cfg.materials().chestThreshold());
 		assertEquals("minecraft:dirt", cfg.defaults().block());
 		assertTrue(cfg.allowedBlocks().contains("minecraft:sand"));
+		assertTrue(cfg.session().markerSetsCorner());
 	}
 
 	@Test
@@ -47,7 +48,17 @@ class ConfigLoaderTest {
 		assertTrue(cfg.animation().enabled());
 		assertEquals("vertical", cfg.defaults().direction());
 		assertEquals(5, cfg.limits().maxGatesPerPlayer());
+		assertTrue(cfg.session().markerSetsCorner());
 		assertEquals(3, warnings.size(), warnings.toString());
+	}
+
+	@Test
+	void markerSetsCornerCanBeTurnedOff() {
+		GatesPlusConfig cfg = ConfigLoader.parse(new StringReader("""
+				session:
+				  marker-sets-corner: false
+				"""), new ArrayList<>());
+		assertFalse(cfg.session().markerSetsCorner());
 	}
 
 	@Test

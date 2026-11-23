@@ -64,8 +64,12 @@ public final class CreateSession {
 
 	private long lastClickMillis;
 
-	/** A marker block placed during this session, removed again when the session ends. */
-	public record PlacedMarker(net.minecraft.server.level.ServerLevel level, BlockPos pos) {}
+	/**
+	 * A marker block placed during this session, removed again when the session ends.
+	 * @param replaced the gate block the marker temporarily replaced (edit session), or null (air)
+	 */
+	public record PlacedMarker(net.minecraft.server.level.ServerLevel level, BlockPos pos,
+			net.minecraft.world.level.block.state.BlockState replaced) {}
 
 	/** At most one placed marker per corner: placing it again moves it. */
 	private final java.util.Map<Point, PlacedMarker> placedMarkers = new java.util.EnumMap<>(Point.class);
@@ -74,8 +78,22 @@ public final class CreateSession {
 	 * Remembers a newly placed marker for {@code corner}.
 	 * @return the previously placed marker of that corner (to be removed from the world), or null
 	 */
-	public PlacedMarker putPlacedMarker(Point corner, net.minecraft.server.level.ServerLevel level, BlockPos pos) {
-		return placedMarkers.put(corner, new PlacedMarker(level, pos));
+	public PlacedMarker putPlacedMarker(Point corner, net.minecraft.server.level.ServerLevel level, BlockPos pos,
+			net.minecraft.world.level.block.state.BlockState replaced) {
+		return placedMarkers.put(corner, new PlacedMarker(level, pos, replaced));
+	}
+
+	/** Forgets the placed marker at this position (it was broken), returning it, or null. */
+	public PlacedMarker removePlacedMarkerAt(net.minecraft.server.level.ServerLevel level, BlockPos pos) {
+		var it = placedMarkers.values().iterator();
+		while (it.hasNext()) {
+			PlacedMarker m = it.next();
+			if (m.level() == level && m.pos().equals(pos)) {
+				it.remove();
+				return m;
+			}
+		}
+		return null;
 	}
 
 	public java.util.Collection<PlacedMarker> placedMarkers() {

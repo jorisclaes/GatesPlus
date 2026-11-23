@@ -25,6 +25,17 @@ public final class WandEvents {
 			return InteractionResult.SUCCESS;
 		});
 
+		// edit session: a marker on a block of the gate being edited takes that block's place
+		UseBlockCallback.EVENT.register((player, level, hand, hit) -> {
+			var stack = player.getItemInHand(hand);
+			if (!be.jorisclaes.gatesplus.marker.MarkerBlocks.isMarkerItem(stack)) return InteractionResult.PASS;
+			if (!(player instanceof ServerPlayer sp) || !(level instanceof net.minecraft.server.level.ServerLevel sl)) {
+				return InteractionResult.PASS;
+			}
+			return GatesPlus.get().gates().sessions().placeMarkerOnGate(sp, sl, hit.getBlockPos(), stack)
+					? InteractionResult.SUCCESS : InteractionResult.PASS;
+		});
+
 		UseBlockCallback.EVENT.register((player, level, hand, hit) -> {
 			if (hand != InteractionHand.MAIN_HAND || !Wand.isWand(player.getItemInHand(hand))) return InteractionResult.PASS;
 			if (player instanceof ServerPlayer sp) GatesPlus.get().gates().sessions().onRightClick(sp);

@@ -383,7 +383,7 @@ public final class GpCommand {
 			ItemStack stack = new ItemStack(item);
 			if (!p.getInventory().add(stack) || !stack.isEmpty()) ReturnChestTracker.drop(p.level(), p, stack);
 		}
-		Messages.send(p, "get.marker.done");
+		Messages.send(p, GatesPlus.get().config().session().markerSetsCorner() ? "get.marker.done" : "get.marker.done_click");
 		return 1;
 	}
 

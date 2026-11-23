@@ -86,10 +86,10 @@ Om een hoek midden in de lucht te zetten gebruik je markerblokken:
 /gp get markerblock
 ```
 
-Je krijgt er twee: een **gouden "1"** (linksboven, hoek 1) en een **rode "2"** (rechtsonder, hoek 2). Plaats ze waar de hoeken moeten komen: **plaatsen zet meteen de hoek**, net alsof je er met de bijl op klikt (klikken met de bijl mag ook). Elk blok zet altijd zijn eigen hoek, in welke volgorde je ze ook plaatst.
+Je krijgt er twee: een **gouden "1"** (linksboven, hoek 1) en een **rode "2"** (rechtsonder, hoek 2). Plaats ze waar de hoeken moeten komen: **plaatsen zet meteen de hoek**, net alsof je er met de bijl op klikt (klikken met de bijl mag ook). Elk blok zet altijd zijn eigen hoek, in welke volgorde je ze ook plaatst. Een serverbeheerder kan dit uitzetten met `session.marker-sets-corner: false`; dan moet je na het plaatsen nog met de bijl op de marker klikken.
 
 - Er staat altijd hoogstens **één "1" en één "2"**: plaats je een marker opnieuw, dan verdwijnt de oude en verhuist de hoek mee.
-
+- **Bij `/gp edit` van een dichte poort** staan op de hoeken poortblokken. Rechtsklik dan met een marker **op een blok van die poort**: het poortblok wordt tijdelijk de marker. Bij `/gp confirm`, `/gp cancel` of als je de marker kapotslaat, komt het poortblok terug (je betaalt niets en de poort raakt niet kapot).
 - Markerblokken krijg je **alleen tijdens een sessie** (`/gp create` of `/gp edit`).
 - Markers ín de poort verdwijnen vanzelf als de poort gebouwd wordt.
 - Als de sessie stopt, verdwijnen ongebruikte markers uit je inventory en geplaatste markers uit de wereld.
@@ -268,6 +268,7 @@ non-full-block-whitelist:    # niet-volle blokken die toch mogen (tralies, ruite
 
 session:
   timeout-minutes: 10
+  marker-sets-corner: true   # markerblok plaatsen zet meteen de hoek (false = klik erop met de bijl)
 
 defaults:                    # standaardwaarden voor een nieuwe poort
   block: minecraft:dirt

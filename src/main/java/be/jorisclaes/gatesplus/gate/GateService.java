@@ -254,7 +254,8 @@ public final class GateService {
 	 * (fire, pistons, commands, ...) is marked broken.
 	 */
 	public boolean verify(ServerLevel level, Gate gate, long now, boolean force) {
-		if (gate.isOpen() || animator.isAnimating(gate)) return true;
+		// locked = in an edit session: markers may temporarily replace gate blocks
+		if (gate.isOpen() || animator.isAnimating(gate) || isLocked(gate)) return true;
 		if (!force) {
 			Long last = lastVerify.get(gate.id());
 			if (last != null && now - last < 100) return true;
@@ -460,6 +461,7 @@ public final class GateService {
 			return fail(player, "confirm.not_air", invalid.size());
 		}
 
+		if (edit) sessions.restoreReplacedGateBlocks(s);
 		return edit ? applyEdit(player, level, existing, cand, block, oldBlock) : applyCreate(player, level, cand, block);
 	}
 

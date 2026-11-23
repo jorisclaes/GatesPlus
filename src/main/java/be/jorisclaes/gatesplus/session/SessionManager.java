@@ -119,11 +119,62 @@ public final class SessionManager {
 	 */
 	private static void removeMarkerBlocks(ServerPlayer player, CreateSession s) {
 		MarkerBlocks.removeItems(player);
-		for (CreateSession.PlacedMarker m : s.placedMarkers()) {
-			if (m.level().isLoaded(m.pos()) && MarkerBlocks.isMarker(m.level().getBlockState(m.pos()))) {
-				m.level().removeBlock(m.pos(), false);
+		for (CreateSession.PlacedMarker m : s.placedMarkers()) takeBack(m);
+		s.placedMarkers().clear();
+	}
+
+	/** Removes a placed marker from the world; a gate block it replaced (edit session) comes back. */
+	private static void takeBack(CreateSession.PlacedMarker m) {
+		if (!m.level().isLoaded(m.pos()) || !MarkerBlocks.isMarker(m.level().getBlockState(m.pos()))) return;
+		if (m.replaced() != null) m.level().setBlock(m.pos(), m.replaced(), net.minecraft.world.level.block.Block.UPDATE_ALL);
+		else m.level().removeBlock(m.pos(), false);
+	}
+
+	/**
+	 * Confirming an edit: markers that replaced gate blocks give them back first, so the gate is
+	 * complete again before the edit is applied (markers on air are cleared by the build as usual).
+	 */
+	public void restoreReplacedGateBlocks(CreateSession s) {
+		var it = s.placedMarkers().iterator();
+		while (it.hasNext()) {
+			CreateSession.PlacedMarker m = it.next();
+			if (m.replaced() == null) continue;
+			takeBack(m);
+			it.remove();
+		}
+	}
+
+	/** A placed marker was broken: forget it, and put back the gate block it replaced (if any). */
+	public void onMarkerBroken(ServerLevel level, BlockPos pos) {
+		for (CreateSession s : sessions.values()) {
+			CreateSession.PlacedMarker m = s.removePlacedMarkerAt(level, pos);
+			if (m != null && m.replaced() != null && level.getBlockState(pos).isAir()) {
+				level.setBlock(pos, m.replaced(), net.minecraft.world.level.block.Block.UPDATE_ALL);
 			}
 		}
+	}
+
+	/**
+	 * Edit session: right-click with a marker on a block of the gate being edited. The corner of a
+	 * closed gate is a gate block, so the marker takes its place until the session ends.
+	 * @return true when handled (the marker replaced the gate block)
+	 */
+	public boolean placeMarkerOnGate(ServerPlayer player, ServerLevel level, BlockPos pos,
+			net.minecraft.world.item.ItemStack stack) {
+		CreateSession s = get(player);
+		if (s == null || s.type() != CreateSession.Type.EDIT) return false;
+		Gate gate = service.manager().byId(s.gateId());
+		if (gate == null || service.manager().gateAt(level, pos) != gate) return false;
+		BlockState old = level.getBlockState(pos);
+		if (!old.is(service.manager().blockOf(gate))) return false;
+		if (!(stack.getItem() instanceof net.minecraft.world.item.BlockItem bi)) return false;
+		level.setBlock(pos, bi.getBlock().defaultBlockState(), net.minecraft.world.level.block.Block.UPDATE_ALL);
+		if (!onMarkerPlaced(player, level, pos, old)) {
+			level.setBlock(pos, old, net.minecraft.world.level.block.Block.UPDATE_ALL);
+			return true;
+		}
+		if (!player.hasInfiniteMaterials()) stack.shrink(1);
+		return true;
 	}
 
 	/**
@@ -132,6 +183,11 @@ public final class SessionManager {
 	 * @return false when the marker cannot be used here (it is then removed again)
 	 */
 	public boolean onMarkerPlaced(ServerPlayer player, ServerLevel level, BlockPos pos) {
+		return onMarkerPlaced(player, level, pos, null);
+	}
+
+	/** @param replaced the gate block the marker replaced, or null when it was placed in air */
+	private boolean onMarkerPlaced(ServerPlayer player, ServerLevel level, BlockPos pos, BlockState replaced) {
 		CreateSession s = get(player);
 		if (s == null) return false;
 		CreateSession.Point corner = MarkerBlocks.cornerOf(level.getBlockState(pos));
@@ -140,7 +196,7 @@ public final class SessionManager {
 		if (s.dimension() != null && !s.dimension().equals(dim)) {
 			Messages.actionBar(player, "wand.other_dimension");
 			// give the item back (survival consumed it); the block itself is removed by the caller
-			if (!player.hasInfiniteMaterials()) {
+			if (replaced == null && !player.hasInfiniteMaterials()) {
 				player.getInventory().add(new net.minecraft.world.item.ItemStack(
 						corner == CreateSession.Point.CORNER1 ? MarkerBlocks.TOP_LEFT_ITEM : MarkerBlocks.BOTTOM_RIGHT_ITEM));
 			}
@@ -148,11 +204,12 @@ public final class SessionManager {
 		}
 		s.setDimension(dim);
 
-		CreateSession.PlacedMarker old = s.putPlacedMarker(corner, level, pos);
-		if (old != null && !old.pos().equals(pos) && old.level().isLoaded(old.pos())
-				&& MarkerBlocks.cornerOf(old.level().getBlockState(old.pos())) == corner) {
-			old.level().removeBlock(old.pos(), false);
-		}
+		CreateSession.PlacedMarker old = s.putPlacedMarker(corner, level, pos, replaced);
+		if (old != null && !old.pos().equals(pos)) takeBack(old);
+		s.touch();
+
+		// config session.marker-sets-corner: false = the marker only marks, the wand sets the corner
+		if (!GatesPlus.get().config().session().markerSetsCorner()) return true;
 
 		invalid.remove(player.getUUID());
 		boolean hadBox = s.hasBox();

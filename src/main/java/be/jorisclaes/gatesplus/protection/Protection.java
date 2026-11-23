@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Set;
 
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
+
+import be.jorisclaes.gatesplus.marker.MarkerBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -49,6 +51,10 @@ public final class Protection {
 			if (!(level instanceof ServerLevel sl)) return;
 			GateService s = gates();
 			if (s == null) return;
+			if (MarkerBlocks.isMarker(state)) {
+				s.sessions().onMarkerBroken(sl, pos);
+				return;
+			}
 			Gate gate = s.manager().gateAt(level, pos);
 			if (gate != null && !gate.isOpen() && state.is(s.manager().blockOf(gate))) {
 				s.markBroken(sl, gate, 1);

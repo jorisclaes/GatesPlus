@@ -27,7 +27,7 @@ public record GatesPlusConfig(
 	public record Limits(int maxGatesPerPlayer, int maxGateBlocks, int maxWidth, int maxHeight, int maxDepth,
 			int maxTriggerDistance, int maxGroupsPerPlayer, int maxMembersPerGroup, int maxConcurrentAnimations) {}
 
-	public record Session(int timeoutMinutes) {}
+	public record Session(int timeoutMinutes, boolean markerSetsCorner) {}
 
 	public record Defaults(String block, boolean indestructible, boolean fireproof, boolean animationEnabled,
 			String direction, int animationTicks) {}
