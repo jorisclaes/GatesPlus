@@ -10,7 +10,8 @@
 		"FireBlockMixin",
 		"PistonBaseBlockMixin",
 		"ServerExplosionMixin",
-		"ServerPlayerMixin"
+		"ServerPlayerMixin",
+		"TextDisplayAccessor"
 	],
 	"injectors": {
 		"defaultRequire": 1

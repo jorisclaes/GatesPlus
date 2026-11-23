@@ -14,19 +14,18 @@ import be.jorisclaes.gatesplus.GatesPlus;
 import be.jorisclaes.gatesplus.gate.Gate;
 import be.jorisclaes.gatesplus.gate.GateService;
 import be.jorisclaes.gatesplus.gate.GateStatus;
-import be.jorisclaes.gatesplus.network.Network;
 import be.jorisclaes.gatesplus.network.PanelPayload;
 import be.jorisclaes.gatesplus.redstone.GateTicker;
 import be.jorisclaes.gatesplus.storage.AsyncStorage;
 
-/** /gp devstats: live numbers for admins, as a HUD panel (client mod) or in chat. */
+/** /gp devstats: live numbers for admins, as a HUD panel (client mod) or in the sidebar. */
 public final class DevStats {
 	private final Set<UUID> viewers = new HashSet<>();
 
 	/** @return true when the panel is now on */
 	public boolean toggle(ServerPlayer player) {
 		if (viewers.remove(player.getUUID())) {
-			Network.send(player, PanelPayload.hide(PanelPayload.DEVSTATS));
+			Panels.hide(player, PanelPayload.DEVSTATS);
 			return false;
 		}
 		viewers.add(player.getUUID());
@@ -88,9 +87,7 @@ public final class DevStats {
 				viewers.remove(uuid);
 				continue;
 			}
-			if (!Network.send(p, new PanelPayload(PanelPayload.DEVSTATS, Messages.raw(p, "dev.title"), rows(p)))) {
-				viewers.remove(uuid); // no client mod: chat dump only
-			}
+			Panels.show(p, new PanelPayload(PanelPayload.DEVSTATS, Messages.raw(p, "dev.title"), rows(p)));
 		}
 	}
 }

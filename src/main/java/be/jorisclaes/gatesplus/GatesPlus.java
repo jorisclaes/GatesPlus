@@ -78,6 +78,7 @@ public class GatesPlus implements ModInitializer {
 			if (entity.entityTags().contains(GateAnimator.DISPLAY_TAG) && !gates.animator().isOwnDisplay(entity)) {
 				entity.discard();
 			}
+			if (be.jorisclaes.gatesplus.marker.MarkerLabels.isStale(entity)) entity.discard();
 		});
 
 		ServerTickEvents.END_SERVER_TICK.register(this::onTick);
@@ -92,6 +93,7 @@ public class GatesPlus implements ModInitializer {
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, srv) -> {
 			gates.sessions().onDisconnect(handler.player);
 			devStats.remove(handler.player.getUUID());
+			be.jorisclaes.gatesplus.util.Panels.forget(handler.player.getUUID());
 		});
 	}
 

@@ -26,7 +26,7 @@ public final class MarkerBlock extends Block {
 		super.setPlacedBy(level, pos, state, placer, stack);
 		if (!(level instanceof ServerLevel serverLevel)) return;
 		boolean tracked = placer instanceof ServerPlayer player
-				&& GatesPlus.get().gates().sessions().onMarkerPlaced(player, serverLevel, pos);
+				&& GatesPlus.get().gates().sessions().onMarkerPlaced(player, serverLevel, pos, MarkerBlocks.cornerOfCustom(state));
 		if (!tracked) serverLevel.removeBlock(pos, false);
 	}
 }

@@ -41,6 +41,8 @@ wand:
 
 get:
   marker:
+    item1: "Marker top left (1)"
+    item2: "Marker bottom right (2)"
     no_session: "&cYou only get marker blocks during a session: start /gp create or /gp edit <gate> first."
     done: "&aYou got 2 marker blocks: &6top left (1) &aand &cbottom right (2)&a. &7Place them: each block sets its own corner right away. Placing one again moves that marker; they disappear when the gate is built."
     done_click: "&aYou got 2 marker blocks: &6top left (1) &aand &cbottom right (2)&a. &7Place them and click them with the axe to set the corner; they disappear when the gate is built."
@@ -49,11 +51,10 @@ session:
   none: "&cYou have no active session. Start with /gp create or /gp edit."
   cancelled: "&7Session stopped."
   timeout: "&7Your session stopped after {0} minutes without activity."
-  summary_actionbar: "&7{0}"
 
 create:
   started: "&aSession started! &7Left-click = corner 1 (top left) and corner 2 (bottom right), right-click = remove last point."
-  no_client_mod: "&7Tip: with the GatesPlus client mod you get nicer markers and an info panel."
+  no_client_mod: "&7Tip: with the GatesPlus client mod you get nicer markers and the info panel as a HUD (now: fake blocks and the sidebar)."
   max_gates: "&cYou already have the maximum number of gates ({0})."
 
 edit:

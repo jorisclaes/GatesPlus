@@ -41,6 +41,8 @@ wand:
 
 get:
   marker:
+    item1: "Marker linksboven (1)"
+    item2: "Marker rechtsonder (2)"
     no_session: "&cMarkerblokken krijg je alleen tijdens een sessie: start eerst /gp create of /gp edit <poort>."
     done: "&aJe kreeg 2 markerblokken: &6linksboven (1) &aen &crechtsonder (2)&a. &7Plaats ze: elk blok zet meteen zijn eigen hoek. Opnieuw plaatsen verplaatst de marker; ze verdwijnen als de poort gebouwd wordt."
     done_click: "&aJe kreeg 2 markerblokken: &6linksboven (1) &aen &crechtsonder (2)&a. &7Plaats ze en klik erop met de bijl om de hoek te zetten; ze verdwijnen als de poort gebouwd wordt."
@@ -49,11 +51,10 @@ session:
   none: "&cJe hebt geen actieve sessie. Start met /gp create of /gp edit."
   cancelled: "&7Sessie gestopt."
   timeout: "&7Je sessie is gestopt na {0} minuten zonder activiteit."
-  summary_actionbar: "&7{0}"
 
 create:
   started: "&aSessie gestart! &7Linkerklik = hoek 1 (linksboven) en hoek 2 (rechtsonder), rechterklik = laatste punt weg."
-  no_client_mod: "&7Tip: met de GatesPlus client-mod zie je mooiere markers en een info-venster."
+  no_client_mod: "&7Tip: met de GatesPlus client-mod zie je mooiere markers en het info-venster als HUD (nu: nepblokken en de zijbalk)."
   max_gates: "&cJe hebt al het maximum aantal poorten ({0})."
 
 edit:

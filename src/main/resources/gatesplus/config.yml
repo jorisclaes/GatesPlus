@@ -68,6 +68,11 @@ session:
   # true = een markerblok plaatsen zet meteen zijn hoek (zoals klikken met de bijl)
   # false = markers zijn alleen een hulpmiddel; klik erop met de bijl om de hoek te zetten
   marker-sets-corner: true
+  # false = markers zijn gewone vanilla blokken (gele/rode beton) met een zwevend "1"/"2";
+  #         spelers zonder de GatesPlus client-mod kunnen dan ook meedoen
+  # true  = eigen markerblokken met textuur; dan heeft ELKE speler de client-mod nodig
+  # (wijzigen vraagt een herstart van de server)
+  custom-marker-blocks: false
 
 # Standaardwaarden voor een nieuwe poort (worden aan de poort zelf gekoppeld)
 defaults:

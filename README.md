@@ -38,14 +38,22 @@ Bouw poorten van (bijna) elk blok. Een poort gaat **vloeiend open en dicht met r
 | [Fabric API](https://modrinth.com/mod/fabric-api) | voor 26.3 |
 | Java | 25 |
 
-> **De mod is nodig op de server én bij elke speler.** GatesPlus voegt eigen blokken toe (de markerblokken), dus spelers zonder de mod kunnen niet joinen.
+> **De mod is nodig op de server; bij de spelers is hij optioneel.** Spelers zonder de mod (gewone vanilla client) kunnen gewoon joinen en alles doen. Met de mod krijg je de mooie extra's:
+>
+> | | Met client-mod | Zonder client-mod |
+> |---|---|---|
+> | Selectie | doorzichtige kaders (goud/rood/groen/blauw) | nepblokken die alleen jij ziet (goud = hoek 1, redstone = hoek 2, groen glas = randen, diamant = trigger) |
+> | Info-venster / dev-paneel | HUD-venster rechtsboven | scorebord-zijbalk rechts |
+> | Markerblokken | gele/rode beton met een zwevend "1"/"2" (of eigen blokken, zie hieronder) | idem |
+>
+> Zet een serverbeheerder `session.custom-marker-blocks: true`, dan gebruikt GatesPlus eigen markerblokken met textuur; dan is de mod **wel verplicht bij elke speler** (anders kunnen ze niet joinen).
 
 SQLite, MySQL, YAML en de LuckPerms-koppeling zitten al in de jar; je hoeft niets extra te installeren.
 
 ## Installatie
 
 1. Installeer Fabric Loader voor Minecraft 26.3.
-2. Zet `gatesplus-<versie>.jar` en Fabric API in de `mods`-map (op de server **en** bij elke speler).
+2. Zet `gatesplus-<versie>.jar` en Fabric API in de `mods`-map van de server. Spelers mogen dezelfde jar (met Fabric API) in hun eigen `mods`-map zetten voor de mooie extra's; dat hoeft niet.
 3. Start de server. Bij de eerste start wordt `config/gatesplus/` aangemaakt met:
    - `config.yml` – alle instellingen (met uitleg erbij),
    - `gatesplus.db` – de database (bij SQLite),
@@ -86,7 +94,7 @@ Om een hoek midden in de lucht te zetten gebruik je markerblokken:
 /gp get markerblock
 ```
 
-Je krijgt er twee: een **gouden "1"** (linksboven, hoek 1) en een **rode "2"** (rechtsonder, hoek 2). Plaats ze waar de hoeken moeten komen: **plaatsen zet meteen de hoek**, net alsof je er met de bijl op klikt (klikken met de bijl mag ook). Elk blok zet altijd zijn eigen hoek, in welke volgorde je ze ook plaatst. Een serverbeheerder kan dit uitzetten met `session.marker-sets-corner: false`; dan moet je na het plaatsen nog met de bijl op de marker klikken.
+Je krijgt er twee: een **gele "1"** (linksboven, hoek 1) en een **rode "2"** (rechtsonder, hoek 2). Standaard zijn het gele en rode betonblokken met een glinster; geplaatst krijgen ze een zwevend cijfer erboven. (Met `session.custom-marker-blocks: true` zijn het eigen blokken met het cijfer op de textuur.) Plaats ze waar de hoeken moeten komen: **plaatsen zet meteen de hoek**, net alsof je er met de bijl op klikt (klikken met de bijl mag ook). Elk blok zet altijd zijn eigen hoek, in welke volgorde je ze ook plaatst. Een serverbeheerder kan dit uitzetten met `session.marker-sets-corner: false`; dan moet je na het plaatsen nog met de bijl op de marker klikken.
 
 - Er staat altijd hoogstens **één "1" en één "2"**: plaats je een marker opnieuw, dan verdwijnt de oude en verhuist de hoek mee.
 - **Bij `/gp edit` van een dichte poort** staan op de hoeken poortblokken. Rechtsklik dan met een marker **op een blok van die poort**: het poortblok wordt tijdelijk de marker. Bij `/gp confirm`, `/gp cancel` of als je de marker kapotslaat, komt het poortblok terug (je betaalt niets en de poort raakt niet kapot).
@@ -216,9 +224,9 @@ Met een groep deel je poorten met andere spelers.
 
 ## Info-venster en dev-modus
 
-Tijdens `/gp create` en `/gp edit` toont een **venster rechtsboven** alles over de poort waaraan je werkt: naam en id, blok, trigger-blok, hoeken en grootte, blokken (`12 / 16`, en hoeveel je bij je hebt), status, bescherming, animatie, redstone en groep/eigenaar. Alles wordt meteen bijgewerkt.
+Tijdens `/gp create` en `/gp edit` toont een **venster rechtsboven** (zonder client-mod: in de **scorebord-zijbalk**) alles over de poort waaraan je werkt: naam en id, blok, trigger-blok, hoeken en grootte, blokken (`12 / 16`, en hoeveel je bij je hebt), status, bescherming, animatie, redstone en groep/eigenaar. Alles wordt meteen bijgewerkt.
 
-**Dev-modus** (`/gp devstats`, admin) toont een tweede venster met live serverstatistieken: aantal poorten (geladen/actief/kapot), tijd per tick, controles per seconde, animaties, sessies, database-wachtrij en fouten. In dev-modus krijg je ook extra meldingen, zoals "poort is onbreekbaar" en "poort is kapot". Nogmaals `/gp devstats` zet het weer uit.
+**Dev-modus** (`/gp devstats`, admin) toont een tweede venster (zonder client-mod: onderaan in de zijbalk, max. 15 regels) met live serverstatistieken: aantal poorten (geladen/actief/kapot), tijd per tick, controles per seconde, animaties, sessies, database-wachtrij en fouten. In dev-modus krijg je ook extra meldingen, zoals "poort is onbreekbaar" en "poort is kapot". Nogmaals `/gp devstats` zet het weer uit.
 
 ## Rechten (permissions)
 
@@ -276,6 +284,7 @@ non-full-block-whitelist:    # niet-volle blokken die toch mogen (tralies, ruite
 session:
   timeout-minutes: 10
   marker-sets-corner: true   # markerblok plaatsen zet meteen de hoek (false = klik erop met de bijl)
+  custom-marker-blocks: false # true = eigen markerblokken; dan heeft ELKE speler de client-mod nodig (herstart nodig)
 
 defaults:                    # standaardwaarden voor een nieuwe poort
   block: minecraft:dirt

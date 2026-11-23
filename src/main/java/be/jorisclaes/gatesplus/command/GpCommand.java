@@ -378,8 +378,9 @@ public final class GpCommand {
 			Messages.send(p, "get.marker.no_session");
 			return 0;
 		}
-		for (var item : new net.minecraft.world.item.Item[] {MarkerBlocks.TOP_LEFT_ITEM, MarkerBlocks.BOTTOM_RIGHT_ITEM}) {
-			ItemStack stack = new ItemStack(item);
+		for (var corner : be.jorisclaes.gatesplus.session.CreateSession.Point.values()) {
+			if (corner == be.jorisclaes.gatesplus.session.CreateSession.Point.TRIGGER) continue;
+			ItemStack stack = MarkerBlocks.create(p, corner);
 			if (!p.getInventory().add(stack) || !stack.isEmpty()) ReturnChestTracker.drop(p.level(), p, stack);
 		}
 		Messages.send(p, GatesPlus.get().config().session().markerSetsCorner() ? "get.marker.done" : "get.marker.done_click");
@@ -470,10 +471,8 @@ public final class GpCommand {
 	private static int devstats(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
 		ServerPlayer p = player(c);
 		GatesPlus.get().devStats().print(p);
-		if (Network.hasClientMod(p)) {
-			boolean on = GatesPlus.get().devStats().toggle(p);
-			Messages.send(p, on ? "dev.panel_on" : "dev.panel_off");
-		}
+		boolean on = GatesPlus.get().devStats().toggle(p);
+		Messages.send(p, on ? "dev.panel_on" : "dev.panel_off");
 		return 1;
 	}
 

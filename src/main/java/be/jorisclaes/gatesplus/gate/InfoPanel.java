@@ -87,13 +87,6 @@ public final class InfoPanel {
 		return rows;
 	}
 
-	/** One-line summary for the action bar (players without the client mod). */
-	public static String shortSummary(ServerPlayer p, CreateSession s) {
-		String size = s.hasBox() ? s.sizeX() + "×" + s.sizeY() + "×" + s.sizeZ() : "-";
-		String trigger = s.trigger() == null ? "-" : s.trigger().getX() + " " + s.trigger().getY() + " " + s.trigger().getZ();
-		return size + " | " + BlockFilter.normalize(s.block) + " | trigger " + trigger;
-	}
-
 	private static String check(boolean v) {
 		return v ? "§a✔" : "§c✘";
 	}

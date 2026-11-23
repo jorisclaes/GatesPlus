@@ -37,6 +37,12 @@ public final class Protection {
 			if (!(player instanceof ServerPlayer sp) || !(level instanceof ServerLevel)) return true;
 			if (Wand.isWand(sp.getMainHandItem())) return false;
 			GateService s = gates();
+			// a marker: removed without drops, its corner leaves the selection
+			if (s != null && s.sessions().markerAt(level, pos) != null) {
+				level.removeBlock(pos, false);
+				s.sessions().onMarkerBroken((ServerLevel) level, pos);
+				return false;
+			}
 			Gate gate = s == null ? null : s.manager().gateBlockAt(level, pos, state);
 			if (gate == null || !gate.indestructible()) return true;
 			boolean adminBreak = sp.isCreative() && GatesPlus.get().config().protection().allowOpBreak()
@@ -51,10 +57,7 @@ public final class Protection {
 			if (!(level instanceof ServerLevel sl)) return;
 			GateService s = gates();
 			if (s == null) return;
-			if (MarkerBlocks.isMarker(state)) {
-				s.sessions().onMarkerBroken(sl, pos, state);
-				return;
-			}
+			if (MarkerBlocks.isCustomMarker(state)) return; // untracked leftover, drops nothing
 			Gate gate = s.manager().gateAt(level, pos);
 			if (gate != null && !gate.isOpen() && state.is(s.manager().blockOf(gate))) {
 				s.markBroken(sl, gate, 1);
@@ -82,6 +85,7 @@ public final class Protection {
 		Set<Gate> damaged = new HashSet<>();
 		List<BlockPos> out = new java.util.ArrayList<>(positions.size());
 		for (BlockPos pos : positions) {
+			if (s.sessions().markerAt(level, pos) != null) continue; // markers stay
 			Gate g = gateBlock(level, pos);
 			if (g == null) {
 				out.add(pos);
@@ -116,6 +120,8 @@ public final class Protection {
 
 	/** Pistons must not move indestructible gate blocks. */
 	public static boolean preventPush(Level level, BlockPos pos) {
+		GateService s = gates();
+		if (s != null && level instanceof ServerLevel && s.sessions().markerAt(level, pos) != null) return true;
 		Gate g = gateBlock(level, pos);
 		if (g == null) return false;
 		if (g.indestructible()) return true;

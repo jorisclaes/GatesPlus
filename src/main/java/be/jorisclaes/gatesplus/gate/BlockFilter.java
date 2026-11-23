@@ -61,7 +61,7 @@ public final class BlockFilter {
 	static String rejectReason(Block block, boolean nonFullWhitelisted) {
 		BlockState state = block.defaultBlockState();
 		if (state.isAir()) return "air";
-		if (be.jorisclaes.gatesplus.marker.MarkerBlocks.isMarker(state)) return "marker block";
+		if (be.jorisclaes.gatesplus.marker.MarkerBlocks.isCustomMarker(state)) return "marker block";
 		if (block instanceof LiquidBlock || !state.getFluidState().isEmpty()) return "liquid/waterlogged";
 		if (state.hasBlockEntity()) return "has a block entity (dupe/data-loss risk)";
 		if (block instanceof TntBlock) return "TNT";

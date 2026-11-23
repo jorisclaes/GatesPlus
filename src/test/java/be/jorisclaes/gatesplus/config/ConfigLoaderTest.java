@@ -28,6 +28,7 @@ class ConfigLoaderTest {
 		assertEquals("minecraft:dirt", cfg.defaults().block());
 		assertTrue(cfg.allowedBlocks().contains("minecraft:sand"));
 		assertTrue(cfg.session().markerSetsCorner());
+		assertFalse(cfg.session().customMarkerBlocks()); // vanilla clients can join by default
 		assertEquals("en", cfg.language());
 	}
 
@@ -61,6 +62,15 @@ class ConfigLoaderTest {
 				  marker-sets-corner: false
 				"""), new ArrayList<>());
 		assertFalse(cfg.session().markerSetsCorner());
+	}
+
+	@Test
+	void customMarkerBlocksCanBeTurnedOn() {
+		GatesPlusConfig cfg = ConfigLoader.parse(new StringReader("""
+				session:
+				  custom-marker-blocks: true
+				"""), new ArrayList<>());
+		assertTrue(cfg.session().customMarkerBlocks());
 	}
 
 	@Test

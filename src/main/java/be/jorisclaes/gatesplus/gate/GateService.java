@@ -33,7 +33,6 @@ import be.jorisclaes.gatesplus.animation.GateAnimator;
 import be.jorisclaes.gatesplus.config.GatesPlusConfig;
 import be.jorisclaes.gatesplus.group.Group;
 import be.jorisclaes.gatesplus.group.GroupManager;
-import be.jorisclaes.gatesplus.marker.MarkerBlocks;
 import be.jorisclaes.gatesplus.session.CreateSession;
 import be.jorisclaes.gatesplus.session.SessionManager;
 import be.jorisclaes.gatesplus.storage.StorageException;
@@ -126,7 +125,7 @@ public final class GateService {
 	public void clearMarkers(ServerLevel level, Gate gate) {
 		BlockState air = Blocks.AIR.defaultBlockState();
 		for (BlockPos pos : GateGeometry.positions(gate)) {
-			if (MarkerBlocks.isMarker(level.getBlockState(pos))) level.setBlock(pos, air, Block.UPDATE_ALL);
+			if (sessions.isMarker(level, pos)) level.setBlock(pos, air, Block.UPDATE_ALL);
 		}
 	}
 
@@ -536,7 +535,7 @@ public final class GateService {
 			if (otherTrigger != null && otherTrigger != existing) return fail(player, "confirm.overlap_trigger", otherTrigger.name());
 			BlockState st = level.getBlockState(pos);
 			boolean ownBlock = existing != null && existing.contains(pos.getX(), pos.getY(), pos.getZ()) && st.is(oldBlock);
-			if (!st.isAir() && !ownBlock && !MarkerBlocks.isMarker(st)) invalid.add(pos);
+			if (!st.isAir() && !ownBlock && !sessions.isMarker(level, pos)) invalid.add(pos);
 		}
 		if (!invalid.isEmpty()) {
 			sessions.showInvalid(player, invalid);

@@ -27,10 +27,12 @@ import be.jorisclaes.gatesplus.gate.GateManager;
 import be.jorisclaes.gatesplus.gate.GateService;
 import be.jorisclaes.gatesplus.gate.InfoPanel;
 import be.jorisclaes.gatesplus.marker.MarkerBlocks;
+import be.jorisclaes.gatesplus.marker.MarkerLabels;
 import be.jorisclaes.gatesplus.network.Network;
 import be.jorisclaes.gatesplus.network.PanelPayload;
 import be.jorisclaes.gatesplus.network.SelectionSyncPayload;
 import be.jorisclaes.gatesplus.util.Messages;
+import be.jorisclaes.gatesplus.util.Panels;
 import be.jorisclaes.gatesplus.wand.Wand;
 
 /** Create/edit sessions per player, wand clicks, markers and the info panel. */
@@ -123,9 +125,28 @@ public final class SessionManager {
 		s.placedMarkers().clear();
 	}
 
+	/**
+	 * The marker placed in a session at this position, or null. Vanilla markers are ordinary blocks,
+	 * so a marker only counts while the block is still the marker block of its corner.
+	 */
+	public CreateSession.PlacedMarker markerAt(net.minecraft.world.level.Level level, BlockPos pos) {
+		if (sessions.isEmpty()) return null;
+		for (CreateSession s : sessions.values()) {
+			CreateSession.PlacedMarker m = s.placedMarkerAt(level, pos);
+			if (m != null && level.getBlockState(pos).is(MarkerBlocks.blockFor(m.corner()))) return m;
+		}
+		return null;
+	}
+
+	/** A marker block at pos: a tracked marker, or any own (custom) marker block. */
+	public boolean isMarker(net.minecraft.world.level.Level level, BlockPos pos) {
+		return MarkerBlocks.isCustomMarker(level.getBlockState(pos)) || markerAt(level, pos) != null;
+	}
+
 	/** Removes a placed marker from the world; a gate block it replaced (edit session) comes back. */
 	private static void takeBack(CreateSession.PlacedMarker m) {
-		if (!m.level().isLoaded(m.pos()) || !MarkerBlocks.isMarker(m.level().getBlockState(m.pos()))) return;
+		MarkerLabels.remove(m.level(), m.label());
+		if (!m.level().isLoaded(m.pos()) || !m.level().getBlockState(m.pos()).is(MarkerBlocks.blockFor(m.corner()))) return;
 		if (m.replaced() != null) m.level().setBlock(m.pos(), m.replaced(), net.minecraft.world.level.block.Block.UPDATE_ALL);
 		else m.level().removeBlock(m.pos(), false);
 	}
@@ -148,12 +169,13 @@ public final class SessionManager {
 	 * A marker was broken: forget it, put back the gate block it replaced (if any), and remove the
 	 * corner it marked from the selection of the session it belongs to.
 	 */
-	public void onMarkerBroken(ServerLevel level, BlockPos pos, BlockState brokenState) {
-		CreateSession.Point corner = MarkerBlocks.cornerOf(brokenState);
+	public void onMarkerBroken(ServerLevel level, BlockPos pos) {
 		MinecraftServer server = level.getServer();
 		for (CreateSession s : new ArrayList<>(sessions.values())) {
 			CreateSession.PlacedMarker m = s.removePlacedMarkerAt(level, pos);
 			if (m == null) continue;
+			MarkerLabels.remove(level, m.label());
+			CreateSession.Point corner = m.corner();
 			if (m.replaced() != null && level.getBlockState(pos).isAir()) {
 				level.setBlock(pos, m.replaced(), net.minecraft.world.level.block.Block.UPDATE_ALL);
 			}
@@ -181,9 +203,10 @@ public final class SessionManager {
 		if (gate == null || service.manager().gateAt(level, pos) != gate) return false;
 		BlockState old = level.getBlockState(pos);
 		if (!old.is(service.manager().blockOf(gate))) return false;
-		if (!(stack.getItem() instanceof net.minecraft.world.item.BlockItem bi)) return false;
-		level.setBlock(pos, bi.getBlock().defaultBlockState(), net.minecraft.world.level.block.Block.UPDATE_ALL);
-		if (!onMarkerPlaced(player, level, pos, old)) {
+		CreateSession.Point corner = MarkerBlocks.cornerOfItem(stack);
+		if (corner == null) return false;
+		level.setBlock(pos, MarkerBlocks.blockFor(corner).defaultBlockState(), net.minecraft.world.level.block.Block.UPDATE_ALL);
+		if (!onMarkerPlaced(player, level, pos, corner, old)) {
 			level.setBlock(pos, old, net.minecraft.world.level.block.Block.UPDATE_ALL);
 			return true;
 		}
@@ -196,30 +219,30 @@ public final class SessionManager {
 	 * earlier marker of the same corner is removed, so there is at most one "1" and one "2".
 	 * @return false when the marker cannot be used here (it is then removed again)
 	 */
-	public boolean onMarkerPlaced(ServerPlayer player, ServerLevel level, BlockPos pos) {
-		return onMarkerPlaced(player, level, pos, null);
+	public boolean onMarkerPlaced(ServerPlayer player, ServerLevel level, BlockPos pos, CreateSession.Point corner) {
+		return onMarkerPlaced(player, level, pos, corner, null);
 	}
 
 	/** @param replaced the gate block the marker replaced, or null when it was placed in air */
-	private boolean onMarkerPlaced(ServerPlayer player, ServerLevel level, BlockPos pos, BlockState replaced) {
+	private boolean onMarkerPlaced(ServerPlayer player, ServerLevel level, BlockPos pos, CreateSession.Point corner,
+			BlockState replaced) {
 		CreateSession s = get(player);
-		if (s == null) return false;
-		CreateSession.Point corner = MarkerBlocks.cornerOf(level.getBlockState(pos));
-		if (corner == null) return false;
+		if (s == null || corner == null) return false;
 		String dim = GateManager.dimensionId(level);
 		if (s.dimension() != null && !s.dimension().equals(dim)) {
 			Messages.actionBar(player, "wand.other_dimension");
 			// give the item back (survival consumed it); the block itself is removed by the caller
 			if (replaced == null && !player.hasInfiniteMaterials()) {
-				player.getInventory().add(new net.minecraft.world.item.ItemStack(
-						corner == CreateSession.Point.CORNER1 ? MarkerBlocks.TOP_LEFT_ITEM : MarkerBlocks.BOTTOM_RIGHT_ITEM));
+				player.getInventory().add(MarkerBlocks.create(player, corner));
 			}
 			return false;
 		}
 		s.setDimension(dim);
 
-		CreateSession.PlacedMarker old = s.putPlacedMarker(corner, level, pos, replaced);
+		java.util.UUID label = MarkerBlocks.custom() ? null : MarkerLabels.spawn(level, pos, corner);
+		CreateSession.PlacedMarker old = s.putPlacedMarker(corner, level, pos, replaced, label);
 		if (old != null && !old.pos().equals(pos)) takeBack(old);
+		else if (old != null) MarkerLabels.remove(old.level(), old.label());
 		s.touch();
 
 		// config session.marker-sets-corner: false = the marker only marks, the wand sets the corner
@@ -327,7 +350,9 @@ public final class SessionManager {
 		// A corner marker selects itself and always sets its own corner (top-left = 1,
 		// bottom-right = 2). Any other block selects the air in front of the clicked face
 		// (gates are only built in air; markers are replaced by the gate).
-		CreateSession.Point markerCorner = MarkerBlocks.cornerOf(level.getBlockState(clicked));
+		CreateSession.PlacedMarker clickedMarker = markerAt(level, clicked);
+		CreateSession.Point markerCorner = clickedMarker != null ? clickedMarker.corner()
+				: MarkerBlocks.cornerOfCustom(level.getBlockState(clicked));
 		boolean hadBox = s.hasBox();
 		BlockPos pos = markerCorner != null ? clicked : clicked.relative(face);
 		String suffix = markerCorner != null ? Messages.raw(player, "wand.on_marker") : "";
@@ -384,17 +409,17 @@ public final class SessionManager {
 					Optional.ofNullable(s.corner2()), Optional.ofNullable(s.trigger()),
 					s.mode() == CreateSession.Mode.TRIGGER, GatesPlus.get().config().limits().maxTriggerDistance(),
 					invalid.getOrDefault(player.getUUID(), List.of())));
-			Network.send(player, InfoPanel.forSession(player, s));
 		} else {
 			sendFakeMarkers(player, s);
 		}
+		Panels.show(player, InfoPanel.forSession(player, s)); // HUD panel or sidebar
 	}
 
 	private void clearMarkers(ServerPlayer player) {
 		if (Network.hasClientMod(player)) {
 			Network.send(player, SelectionSyncPayload.EMPTY);
-			Network.send(player, PanelPayload.hide(PanelPayload.INFO));
 		}
+		Panels.hide(player, PanelPayload.INFO);
 		restoreFakeBlocks(player);
 	}
 
@@ -426,7 +451,6 @@ public final class SessionManager {
 		}
 		for (var e : fake.entrySet()) player.connection.send(new ClientboundBlockUpdatePacket(e.getKey(), e.getValue()));
 		fakeBlocks.put(player.getUUID(), new HashSet<>(fake.keySet()));
-		Messages.actionBar(player, "session.summary_actionbar", InfoPanel.shortSummary(player, s));
 	}
 
 	private void restoreFakeBlocks(ServerPlayer player) {

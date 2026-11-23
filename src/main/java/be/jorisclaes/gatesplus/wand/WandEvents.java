@@ -32,8 +32,19 @@ public final class WandEvents {
 			if (!(player instanceof ServerPlayer sp) || !(level instanceof net.minecraft.server.level.ServerLevel sl)) {
 				return InteractionResult.PASS;
 			}
-			return GatesPlus.get().gates().sessions().placeMarkerOnGate(sp, sl, hit.getBlockPos(), stack)
-					? InteractionResult.SUCCESS : InteractionResult.PASS;
+			var sessions = GatesPlus.get().gates().sessions();
+			if (sessions.placeMarkerOnGate(sp, sl, hit.getBlockPos(), stack)) return InteractionResult.SUCCESS;
+			if (be.jorisclaes.gatesplus.marker.MarkerBlocks.custom()) return InteractionResult.PASS; // MarkerBlock.setPlacedBy
+			// vanilla marker: place it like a normal block, then let the session track it by position
+			var corner = be.jorisclaes.gatesplus.marker.MarkerBlocks.cornerOfItem(stack);
+			if (!(stack.getItem() instanceof net.minecraft.world.item.BlockItem item)) return InteractionResult.PASS;
+			var ctx = new net.minecraft.world.item.context.BlockPlaceContext(sp, hand, stack, hit);
+			InteractionResult result = item.place(ctx);
+			if (result.consumesAction()) {
+				net.minecraft.core.BlockPos placed = ctx.getClickedPos();
+				if (!sessions.onMarkerPlaced(sp, sl, placed, corner)) sl.removeBlock(placed, false);
+			}
+			return result;
 		});
 
 		UseBlockCallback.EVENT.register((player, level, hand, hit) -> {

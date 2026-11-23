@@ -27,7 +27,11 @@ public record GatesPlusConfig(
 	public record Limits(int maxGatesPerPlayer, int maxGateBlocks, int maxWidth, int maxHeight, int maxDepth,
 			int maxTriggerDistance, int maxGroupsPerPlayer, int maxMembersPerGroup, int maxConcurrentAnimations) {}
 
-	public record Session(int timeoutMinutes, boolean markerSetsCorner) {}
+	/**
+	 * @param customMarkerBlocks own marker blocks (every player needs the client mod); false = vanilla
+	 *                           blocks with a floating label, so vanilla clients can join. Needs a restart.
+	 */
+	public record Session(int timeoutMinutes, boolean markerSetsCorner, boolean customMarkerBlocks) {}
 
 	public record Defaults(String block, boolean indestructible, boolean fireproof, boolean animationEnabled,
 			String direction, int animationTicks) {}
