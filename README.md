@@ -93,7 +93,7 @@ Je krijgt er twee: een **gouden "1"** (linksboven, hoek 1) en een **rode "2"** (
 - Markerblokken krijg je **alleen tijdens een sessie** (`/gp create` of `/gp edit`).
 - Markers ín de poort verdwijnen vanzelf als de poort gebouwd wordt.
 - Als de sessie stopt, verdwijnen ongebruikte markers uit je inventory en geplaatste markers uit de wereld.
-- Markers breken in één klik en laten niets vallen.
+- Markers breken in één klik en laten niets vallen. **Sla je een marker kapot, dan verdwijnt ook die hoek uit je selectie** (en het trigger-blok, zoals bij rechterklik, want zonder volledige poort heeft dat geen zin).
 
 ### De bijl en markers zijn vergrendeld
 

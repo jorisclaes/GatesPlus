@@ -45,6 +45,20 @@ class CreateSessionTest {
 	}
 
 	@Test
+	void clearCornerRemovesThatCornerOnly() {
+		CreateSession s = session();
+		s.setCorner(CreateSession.Point.CORNER1, new BlockPos(0, 3, 0));
+		s.setCorner(CreateSession.Point.CORNER2, new BlockPos(2, 0, 0));
+		assertTrue(s.clearCorner(CreateSession.Point.CORNER1));
+		assertNull(s.corner1());
+		assertEquals(new BlockPos(2, 0, 0), s.corner2());
+		assertFalse(s.clearCorner(CreateSession.Point.CORNER1));
+		// the undo stack no longer holds corner 1
+		assertEquals(CreateSession.Point.CORNER2, s.undo());
+		assertNull(s.undo());
+	}
+
+	@Test
 	void undoingCorner2AlsoDropsTrigger() {
 		CreateSession s = session();
 		s.clickCorner(new BlockPos(0, 0, 0));

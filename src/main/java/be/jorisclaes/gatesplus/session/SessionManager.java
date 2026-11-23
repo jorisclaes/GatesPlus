@@ -144,13 +144,27 @@ public final class SessionManager {
 		}
 	}
 
-	/** A placed marker was broken: forget it, and put back the gate block it replaced (if any). */
-	public void onMarkerBroken(ServerLevel level, BlockPos pos) {
-		for (CreateSession s : sessions.values()) {
+	/**
+	 * A marker was broken: forget it, put back the gate block it replaced (if any), and remove the
+	 * corner it marked from the selection of the session it belongs to.
+	 */
+	public void onMarkerBroken(ServerLevel level, BlockPos pos, BlockState brokenState) {
+		CreateSession.Point corner = MarkerBlocks.cornerOf(brokenState);
+		MinecraftServer server = level.getServer();
+		for (CreateSession s : new ArrayList<>(sessions.values())) {
 			CreateSession.PlacedMarker m = s.removePlacedMarkerAt(level, pos);
-			if (m != null && m.replaced() != null && level.getBlockState(pos).isAir()) {
+			if (m == null) continue;
+			if (m.replaced() != null && level.getBlockState(pos).isAir()) {
 				level.setBlock(pos, m.replaced(), net.minecraft.world.level.block.Block.UPDATE_ALL);
 			}
+			BlockPos selected = corner == CreateSession.Point.CORNER1 ? s.corner1()
+					: corner == CreateSession.Point.CORNER2 ? s.corner2() : null;
+			if (!pos.equals(selected) || !s.clearCorner(corner)) continue;
+			ServerPlayer owner = server.getPlayerList().getPlayer(s.player());
+			if (owner == null) continue;
+			invalid.remove(owner.getUUID());
+			Messages.actionBar(owner, "wand.undo." + corner.name().toLowerCase(java.util.Locale.ROOT));
+			sync(owner);
 		}
 	}
 

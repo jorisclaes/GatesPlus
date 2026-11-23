@@ -188,6 +188,23 @@ public final class CreateSession {
 		touch();
 		Point p = history.poll();
 		if (p == null) return null;
+		clear(p);
+		return p;
+	}
+
+	/**
+	 * Removes one specific corner (its marker block was broken), wherever it is in the undo order.
+	 * @return false when that corner was not set
+	 */
+	public boolean clearCorner(Point which) {
+		touch();
+		if (which == Point.TRIGGER || (which == Point.CORNER1 ? corner1 : corner2) == null) return false;
+		history.remove(which);
+		clear(which);
+		return true;
+	}
+
+	private void clear(Point p) {
 		switch (p) {
 			case TRIGGER -> {
 				trigger = null;
@@ -206,7 +223,6 @@ public final class CreateSession {
 			}
 		}
 		if (corner1 == null && corner2 == null && trigger == null) dimension = null;
-		return p;
 	}
 
 	public int sizeX() { return Math.abs(corner1.getX() - corner2.getX()) + 1; }

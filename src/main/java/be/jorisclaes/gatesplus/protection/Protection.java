@@ -52,7 +52,7 @@ public final class Protection {
 			GateService s = gates();
 			if (s == null) return;
 			if (MarkerBlocks.isMarker(state)) {
-				s.sessions().onMarkerBroken(sl, pos);
+				s.sessions().onMarkerBroken(sl, pos, state);
 				return;
 			}
 			Gate gate = s.manager().gateAt(level, pos);
