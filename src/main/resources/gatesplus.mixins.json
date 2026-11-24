@@ -11,6 +11,7 @@
 		"FireBlockMixin",
 		"PistonBaseBlockMixin",
 		"ServerExplosionMixin",
+		"ServerPlayerGameModeMixin",
 		"ServerPlayerMixin",
 		"TextDisplayAccessor"
 	],
