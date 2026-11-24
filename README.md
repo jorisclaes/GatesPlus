@@ -42,7 +42,7 @@ Bouw poorten van (bijna) elk blok. Een poort gaat **vloeiend open en dicht met r
 >
 > | | Met client-mod | Zonder client-mod |
 > |---|---|---|
-> | Selectie | doorzichtige kaders (goud/rood/groen/blauw) | nepblokken die alleen jij ziet (goud = hoek 1, redstone = hoek 2, groen glas = randen, diamant = trigger); blokken in de weg blijven zichtbaar met een **rode gloei-omlijning** |
+> | Selectie | doorzichtige kaders (goud/rood/groen/blauw) | hoeken als echte markerblokken (gele "1" / rode "2"), groen glas = randen en diamant = trigger als nepblokken die alleen jij ziet; blokken in de weg blijven zichtbaar met een **rode gloei-omlijning** |
 > | Info-venster / dev-paneel | HUD-venster rechtsboven | scorebord-zijbalk rechts |
 > | Markerblokken | de eigen markerblokken met "1"/"2" op de textuur, ook in je inventory en hand (de server zelf houdt beton) | gele/rode beton met een zwevend "1"/"2" |
 >
@@ -79,9 +79,9 @@ Tijdens `/gp create` of `/gp edit` heb je een gloeiende **houten bijl** (de sele
 
 | Actie | Wat er gebeurt |
 |---|---|
-| **Linkerklik** op een blok | Zet een hoek op het **luchtblok vóór** het vlak waarop je klikt. Eerste klik = hoek 1, tweede = hoek 2, daarna verplaats je hoek 2. |
+| **Linkerklik** op een blok | Zet een hoek op het **luchtblok vóór** het vlak waarop je klikt, en plaatst daar het **markerblok** van die hoek (gele "1" of rode "2"), net alsof je de marker zelf zette. Eerste klik = hoek 1, tweede = hoek 2, daarna verplaats je hoek 2 (de oude marker verdwijnt). Staat daar water of gras, dan zie alleen jij de marker. |
 | **Linkerklik** op een markerblok | Zet de hoek **op het markerblok zelf** (zie hieronder). |
-| **Rechterklik** | Haalt het laatst gezette punt weg: eerst het trigger-blok, dan hoek 2, dan hoek 1. |
+| **Rechterklik** | Haalt het laatst gezette punt weg: eerst het trigger-blok, dan hoek 2, dan hoek 1. Een marker die de bijl plaatste, verdwijnt mee. |
 | **Linkerklik** in trigger-modus | Kiest het trigger-blok (na `/gp set trigger`). |
 
 Je ziet je selectie meteen: hoek 1 **goud**, hoek 2 **rood**, de rand van de poort **groen**, het trigger-blok **blauw** (pulserend). Blokken die het bouwen tegenhouden, worden meteen **rood** gemarkeerd (zonder client-mod: rode gloei-omlijning, ook door muren heen); haal ze weg en de markering verdwijnt vanzelf.
@@ -102,7 +102,7 @@ Je krijgt er twee: een **gele "1"** (linksboven, hoek 1) en een **rode "2"** (re
 - Markers ín de poort verdwijnen vanzelf als de poort gebouwd wordt.
 - Als de sessie stopt, verdwijnen ongebruikte markers uit je inventory en geplaatste markers uit de wereld.
 - Markers kunnen niet verschoven worden met (sticky) pistons en overleven explosies.
-- Markers breken in één klik en laten niets vallen: het markeritem komt **terug in je inventory** (tenzij je er van die hoek nog een hebt). **Sla je een marker kapot, dan verdwijnt ook die hoek uit je selectie** (en het trigger-blok, zoals bij rechterklik, want zonder volledige poort heeft dat geen zin).
+- Markers breken in één klik en laten niets vallen: het markeritem komt **terug in je inventory** (tenzij je er van die hoek nog een hebt; een marker die de bijl plaatste, geeft geen item). **Sla je een marker kapot, dan verdwijnt ook die hoek uit je selectie** (en het trigger-blok, zoals bij rechterklik, want zonder volledige poort heeft dat geen zin).
 
 ### De bijl en markers zijn vergrendeld
 

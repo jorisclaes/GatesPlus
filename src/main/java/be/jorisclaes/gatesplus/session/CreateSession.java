@@ -68,9 +68,10 @@ public final class CreateSession {
 	 * A marker block placed during this session, removed again when the session ends.
 	 * @param replaced the gate block the marker temporarily replaced (edit session), or null (air)
 	 * @param label    floating "1"/"2" above a vanilla marker, or null
+	 * @param fromWand placed by a wand click (no marker item was used, so none is given back)
 	 */
 	public record PlacedMarker(Point corner, net.minecraft.server.level.ServerLevel level, BlockPos pos,
-			net.minecraft.world.level.block.state.BlockState replaced, java.util.UUID label) {}
+			net.minecraft.world.level.block.state.BlockState replaced, java.util.UUID label, boolean fromWand) {}
 
 	/** At most one placed marker per corner: placing it again moves it. */
 	private final java.util.Map<Point, PlacedMarker> placedMarkers = new java.util.EnumMap<>(Point.class);
@@ -80,8 +81,18 @@ public final class CreateSession {
 	 * @return the previously placed marker of that corner (to be removed from the world), or null
 	 */
 	public PlacedMarker putPlacedMarker(Point corner, net.minecraft.server.level.ServerLevel level, BlockPos pos,
-			net.minecraft.world.level.block.state.BlockState replaced, java.util.UUID label) {
-		return placedMarkers.put(corner, new PlacedMarker(corner, level, pos, replaced, label));
+			net.minecraft.world.level.block.state.BlockState replaced, java.util.UUID label, boolean fromWand) {
+		return placedMarkers.put(corner, new PlacedMarker(corner, level, pos, replaced, label, fromWand));
+	}
+
+	/** The placed marker of this corner, or null. */
+	public PlacedMarker placedMarker(Point corner) {
+		return placedMarkers.get(corner);
+	}
+
+	/** Forgets the placed marker of this corner, returning it, or null. */
+	public PlacedMarker removePlacedMarker(Point corner) {
+		return placedMarkers.remove(corner);
 	}
 
 	/** Forgets the placed marker at this position (it was broken), returning it, or null. */

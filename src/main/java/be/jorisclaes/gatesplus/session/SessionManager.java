@@ -236,7 +236,7 @@ public final class SessionManager {
 			}
 			ServerPlayer owner = server.getPlayerList().getPlayer(s.player());
 			// the marker item goes back to the session owner (no drop), unless they still have one
-			if (owner != null) MarkerBlocks.giveBack(owner, corner);
+			if (owner != null && !m.fromWand()) MarkerBlocks.giveBack(owner, corner);
 			BlockPos selected = corner == CreateSession.Point.CORNER1 ? s.corner1()
 					: corner == CreateSession.Point.CORNER2 ? s.corner2() : null;
 			if (!pos.equals(selected) || !s.clearCorner(corner)) continue;
@@ -297,7 +297,7 @@ public final class SessionManager {
 		s.setDimension(dim);
 
 		java.util.UUID label = MarkerBlocks.custom() ? null : MarkerLabels.spawn(level, pos, corner);
-		CreateSession.PlacedMarker old = s.putPlacedMarker(corner, level, pos, replaced, label);
+		CreateSession.PlacedMarker old = s.putPlacedMarker(corner, level, pos, replaced, label, false);
 		if (old != null && !old.pos().equals(pos)) takeBack(old);
 		else if (old != null) MarkerLabels.remove(old.level(), old.label());
 		broadcastMarkers();
@@ -416,6 +416,10 @@ public final class SessionManager {
 		BlockPos pos = markerCorner != null ? clicked : clicked.relative(face);
 		String suffix = markerCorner != null ? Messages.raw(player, "wand.on_marker") : "";
 		CreateSession.SetResult r = markerCorner != null ? s.setCorner(markerCorner, pos) : s.clickCorner(pos);
+		if (markerCorner == null) {
+			placeWandMarker(player, level, s, pos,
+					r == CreateSession.SetResult.CORNER1 ? CreateSession.Point.CORNER1 : CreateSession.Point.CORNER2);
+		}
 		String key = r == CreateSession.SetResult.CORNER1 ? "wand.corner1" : "wand.corner2";
 		if (s.hasBox()) {
 			Messages.actionBar(player, key + "_box", pos.getX(), pos.getY(), pos.getZ(), suffix,
@@ -436,9 +440,40 @@ public final class SessionManager {
 		}
 		invalid.remove(player.getUUID());
 		CreateSession.Point p = s.undo();
+		if (p != null && p != CreateSession.Point.TRIGGER) {
+			CreateSession.PlacedMarker m = s.placedMarker(p);
+			if (m != null && m.fromWand()) {
+				s.removePlacedMarker(p);
+				takeBack(m);
+				broadcastMarkers();
+			}
+		}
 		if (p == null) Messages.actionBar(player, "wand.nothing_to_undo");
 		else Messages.actionBar(player, "wand.undo." + p.name().toLowerCase(java.util.Locale.ROOT));
 		sync(player);
+	}
+
+	/**
+	 * A wand click set a corner: a real marker block goes on that (air) position, exactly as if the
+	 * player had placed the marker item, so the axe and the markers look and behave the same. The
+	 * earlier marker of that corner disappears (a marker placed from an item comes back as item).
+	 * Not air there (water, grass, ...): no block, only the fake marker shown to the player.
+	 */
+	private void placeWandMarker(ServerPlayer player, ServerLevel level, CreateSession s, BlockPos pos,
+			CreateSession.Point corner) {
+		CreateSession.PlacedMarker old = s.placedMarker(corner);
+		if (old != null && old.level() == level && old.pos().equals(pos)) return;
+		if (old != null) {
+			s.removePlacedMarker(corner);
+			takeBack(old);
+			if (!old.fromWand()) MarkerBlocks.giveBack(player, corner);
+		}
+		if (level.getBlockState(pos).isAir() && !level.isOutsideBuildHeight(pos)) {
+			level.setBlock(pos, MarkerBlocks.blockFor(corner).defaultBlockState(), net.minecraft.world.level.block.Block.UPDATE_ALL);
+			java.util.UUID label = MarkerBlocks.custom() ? null : MarkerLabels.spawn(level, pos, corner);
+			s.putPlacedMarker(corner, level, pos, null, label, true);
+		}
+		broadcastMarkers();
 	}
 
 	/** A temporary gate holding just the session box (for distance checks). */
@@ -613,11 +648,19 @@ public final class SessionManager {
 						}
 			}
 		}
-		if (s.corner1() != null) fake.put(s.corner1(), Blocks.GOLD_BLOCK.defaultBlockState());
-		if (s.corner2() != null) fake.put(s.corner2(), Blocks.REDSTONE_BLOCK.defaultBlockState());
+		// corners look like the marker blocks; a real marker there is shown as itself
+		ServerLevel level = player.level();
+		fakeCorner(fake, level, s.corner1(), CreateSession.Point.CORNER1);
+		fakeCorner(fake, level, s.corner2(), CreateSession.Point.CORNER2);
 		if (s.trigger() != null) fake.put(s.trigger(), Blocks.DIAMOND_BLOCK.defaultBlockState());
 		for (var e : fake.entrySet()) player.connection.send(new ClientboundBlockUpdatePacket(e.getKey(), e.getValue()));
 		fakeBlocks.put(player.getUUID(), new HashSet<>(fake.keySet()));
+	}
+
+	private void fakeCorner(Map<BlockPos, BlockState> fake, ServerLevel level, BlockPos pos, CreateSession.Point corner) {
+		if (pos == null) return;
+		if (isMarker(level, pos)) fake.remove(pos);
+		else fake.put(pos, MarkerBlocks.vanillaBlockFor(corner).defaultBlockState());
 	}
 
 	private void restoreFakeBlocks(ServerPlayer player) {
