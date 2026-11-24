@@ -260,11 +260,12 @@ public final class GpCommand {
 			Messages.send(p, "set.trigger.need_corners");
 			return 0;
 		}
+		// trigger mode shows the area the trigger may be in
+		s.enterTriggerMode();
 		// config session.selection-tool: markers = no axe; the block the player looks at becomes the trigger
 		if (!GatesPlus.get().config().session().selectionTool().axe()) {
 			return gates().sessions().setTriggerLookedAt(p) ? 1 : 0;
 		}
-		s.enterTriggerMode();
 		be.jorisclaes.gatesplus.wand.Wand.give(p);
 		Messages.send(p, "set.trigger.mode", GatesPlus.get().config().limits().maxTriggerDistance());
 		gates().sessions().sync(p);

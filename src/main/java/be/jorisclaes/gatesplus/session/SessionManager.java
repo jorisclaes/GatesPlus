@@ -477,6 +477,7 @@ public final class SessionManager {
 		net.minecraft.world.phys.HitResult hit = player.pick(player.blockInteractionRange(), 1.0f, false);
 		if (!(hit instanceof net.minecraft.world.phys.BlockHitResult bh) || hit.getType() != net.minecraft.world.phys.HitResult.Type.BLOCK) {
 			Messages.send(player, "set.trigger.look_at");
+			sync(player); // trigger mode is on: show the area the trigger may be in
 			return false;
 		}
 		invalid.remove(player.getUUID());
@@ -844,9 +845,9 @@ public final class SessionManager {
 		fakeBlocks.put(player.getUUID(), new HashSet<>(fake.keySet()));
 	}
 
-	/** The trigger range is shown while choosing the trigger, and as long as none is set. */
+	/** The trigger range is only shown after /gp set trigger (trigger mode). */
 	private static boolean showTriggerRange(CreateSession s) {
-		return s.hasBox() && (s.mode() == CreateSession.Mode.TRIGGER || s.trigger() == null);
+		return s.hasBox() && s.mode() == CreateSession.Mode.TRIGGER;
 	}
 
 	/**

@@ -51,8 +51,8 @@ final class SelectionRenderer {
 			Gizmos.cuboid(new AABB(c2).inflate(0.02), GizmoStyle.strokeAndFill(RED, 4f, alpha(RED, 0x70))).setAlwaysOnTop();
 		}
 
-		// the area the trigger may be in: while choosing it, and as long as none is set
-		if (box != null && (s.triggerMode() || s.trigger().isEmpty())) {
+		// the area the trigger may be in: only after /gp set trigger (trigger mode)
+		if (box != null && s.triggerMode()) {
 			Gizmos.cuboid(box.inflate(s.triggerRange()), GizmoStyle.stroke(TRIGGER, 3f)).setAlwaysOnTop();
 			drawOutsideRange(box.inflate(s.triggerRange()));
 		}
