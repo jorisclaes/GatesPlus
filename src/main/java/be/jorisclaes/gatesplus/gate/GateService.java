@@ -81,7 +81,7 @@ public final class GateService {
 		groups.clear();
 		for (Group g : storage.loadGroups()) groups.add(g);
 		for (Gate g : storage.loadGates()) manager.add(g);
-		returnChests.load(storage.loadReturnChests());
+		returnChests.load(storage.loadReturnChests(), storage.loadPendingReturns());
 		GatesPlus.LOGGER.info("GatesPlus loaded {} gates and {} groups", manager.count(), groups.all().size());
 	}
 

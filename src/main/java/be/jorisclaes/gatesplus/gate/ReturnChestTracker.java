@@ -1,19 +1,26 @@
 package be.jorisclaes.gatesplus.gate;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -30,18 +37,105 @@ import be.jorisclaes.gatesplus.util.Messages;
 public final class ReturnChestTracker {
 	private static final int SEARCH_RADIUS = 3;
 	private final List<ReturnChestRecord> chests = new ArrayList<>();
+	/** Blocks that found no room in a chest, waiting for /gp claim: owner -> (item id -> amount). */
+	private final Map<UUID, Map<String, Integer>> pending = new HashMap<>();
 
-	public void load(List<ReturnChestRecord> records) {
+	public void load(List<ReturnChestRecord> records, Map<UUID, Map<String, Integer>> pendingReturns) {
 		chests.clear();
 		chests.addAll(records);
+		pending.clear();
+		pendingReturns.forEach((owner, items) -> pending.put(owner, new LinkedHashMap<>(items)));
+	}
+
+	/** Total number of blocks waiting for this player. */
+	public int pendingCount(UUID owner) {
+		Map<String, Integer> items = pending.get(owner);
+		int n = 0;
+		if (items != null) for (int amount : items.values()) n += amount;
+		return n;
+	}
+
+	/**
+	 * Hands back blocks in chests; whatever finds no room is kept (memory + database) until the
+	 * player runs /gp claim at a spot with more room.
+	 */
+	public void give(ServerLevel level, ServerPlayer player, List<ItemStack> stacks) {
+		List<ItemStack> left = spawn(level, player, stacks);
+		if (left.isEmpty()) return;
+		int n = 0;
+		for (ItemStack s : left) {
+			addPending(player.getUUID(), BuiltInRegistries.ITEM.getKey(s.getItem()).toString(), s.getCount());
+			n += s.getCount();
+		}
+		Messages.send(player, "chest.pending", n);
+	}
+
+	/**
+	 * /gp claim: places chests with the waiting blocks, as many as fit here; the rest keeps waiting.
+	 * @return number of blocks handed out
+	 */
+	public int claim(ServerLevel level, ServerPlayer player) {
+		UUID owner = player.getUUID();
+		Map<String, Integer> items = pending.get(owner);
+		if (items == null || items.isEmpty()) {
+			Messages.send(player, "claim.none");
+			return 0;
+		}
+		List<ItemStack> stacks = new ArrayList<>();
+		int total = 0;
+		for (var e : List.copyOf(items.entrySet())) {
+			Identifier id = Identifier.tryParse(e.getKey());
+			Item item = id == null ? null : BuiltInRegistries.ITEM.getOptional(id).orElse(null);
+			if (item == null || item == Items.AIR) {
+				// unknown item (mod removed?): nothing to give, forget it
+				setPending(owner, e.getKey(), 0);
+				continue;
+			}
+			int max = new ItemStack(item).getMaxStackSize();
+			for (int left = e.getValue(); left > 0; left -= max) stacks.add(new ItemStack(item, Math.min(max, left)));
+			total += e.getValue();
+			setPending(owner, e.getKey(), 0);
+		}
+		List<ItemStack> left = spawn(level, player, stacks);
+		int rest = 0;
+		for (ItemStack s : left) {
+			addPending(owner, BuiltInRegistries.ITEM.getKey(s.getItem()).toString(), s.getCount());
+			rest += s.getCount();
+		}
+		if (rest == 0) Messages.send(player, "claim.done", total);
+		else if (rest == total) Messages.send(player, "claim.no_room", rest);
+		else Messages.send(player, "claim.partial", total - rest, rest);
+		return total - rest;
+	}
+
+	private void addPending(UUID owner, String item, int amount) {
+		Map<String, Integer> items = pending.get(owner);
+		int now = (items == null ? 0 : items.getOrDefault(item, 0)) + amount;
+		setPending(owner, item, now);
+	}
+
+	private void setPending(UUID owner, String item, int amount) {
+		if (amount > 0) {
+			pending.computeIfAbsent(owner, k -> new LinkedHashMap<>()).put(item, amount);
+		} else {
+			Map<String, Integer> items = pending.get(owner);
+			if (items != null) {
+				items.remove(item);
+				if (items.isEmpty()) pending.remove(owner);
+			}
+		}
+		GatesPlus.get().storage().run(s -> s.setPendingReturn(owner, item, amount));
 	}
 
 	public int count() {
 		return chests.size();
 	}
 
-	/** Puts {@code stacks} into new chests near the player; anything that doesn't fit is dropped. */
-	public void spawn(ServerLevel level, ServerPlayer player, List<ItemStack> stacks) {
+	/**
+	 * Puts {@code stacks} into new chests near the player.
+	 * @return the stacks that found no room (no free spot left)
+	 */
+	private List<ItemStack> spawn(ServerLevel level, ServerPlayer player, List<ItemStack> stacks) {
 		List<BlockPos> placed = new ArrayList<>();
 		int index = 0;
 		while (index < stacks.size()) {
@@ -60,7 +154,7 @@ public final class ReturnChestTracker {
 			GatesPlus.get().storage().run(s -> s.insertReturnChest(rec));
 			Messages.send(player, "chest.placed", pos.getX(), pos.getY(), pos.getZ());
 		}
-		for (; index < stacks.size(); index++) drop(level, player, stacks.get(index));
+		return new ArrayList<>(stacks.subList(index, stacks.size()));
 	}
 
 	public static void drop(ServerLevel level, ServerPlayer player, ItemStack stack) {

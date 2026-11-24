@@ -96,6 +96,7 @@ public final class GpCommand {
 						.executes(GpCommand::repairSession)
 						.then(argument("gate", StringArgumentType.word()).suggests(EDITABLE_GATES)
 								.executes(GpCommand::repair)))
+				.then(literal("claim").executes(GpCommand::claim))
 				.then(GroupCommands.build())
 				.then(literal("reload").requires(Perms.ADMIN_RELOAD.require()).executes(GpCommand::reload))
 				.then(literal("devstats").requires(Perms.ADMIN_DEVSTATS.require()).executes(GpCommand::devstats)));
@@ -520,6 +521,12 @@ public final class GpCommand {
 		gates().repair(p, g);
 		if (own != null) gates().sessions().sync(p); // refresh "blocks x / y" in the info panel
 		return 1;
+	}
+
+	/** Blocks that found no room in a return chest: chests here for as many as fit, the rest keeps waiting. */
+	private static int claim(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
+		ServerPlayer p = player(c);
+		return gates().returnChests().claim(p.level(), p);
 	}
 
 	private static int reload(CommandContext<CommandSourceStack> c) {

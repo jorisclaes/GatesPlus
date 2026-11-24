@@ -76,7 +76,7 @@ Gebruik de project-skill **`gatesplus-dev`** (`.claude/skills/gatesplus-dev/`) b
 - `/gp repair` instelbaar: `repair.command-enabled` (uit = alleen met de hand herstellen, meldingen/status zeggen dat) en `repair.max-distance` (0 = onbeperkt, `bypass.limits` negeert het).
 - In een sessie werken `/gp info`, `/gp repair` en `/gp remove` **zonder naam** op de poort van de sessie (info: de sessiegegevens; remove: alleen in een edit-sessie, stopt die eerst).
 - `/gp repair [id|naam]` plaatst de ontbrekende blokken echt (onder → boven); zonder naam: de poort van je eigen edit-sessie. Gat met de hand vullen met het juiste blok telt ook.
-- Betalen met blokken (uit te zetten). Alleen **betaalde** blokken komen terug (`paid_count`); **creative bouwt gratis en krijgt niets terug**. Meer dan 60 items terug → vanilla-kist die verdwijnt als ze leeg is (breekbaar, normale spellogica).
+- Betalen met blokken (uit te zetten). Alleen **betaalde** blokken komen terug (`paid_count`); **creative bouwt gratis en krijgt niets terug**. Meer dan 60 items terug → vanilla-kist(en) die verdwijnen als ze leeg zijn (breekbaar, normale spellogica). Geen plaats meer voor kisten → de rest wordt bewaard in de database (`gp_pending_returns`) en met `/gp claim` opgehaald: zoveel kisten als er passen, de rest blijft tot de volgende `/gp claim`; herinnering bij inloggen.
 - Blokken die niet stabiel kunnen blijven, worden gefilterd; vallende blokken worden vastgezet (mixin).
 
 **Bescherming**

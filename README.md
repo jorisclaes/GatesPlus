@@ -155,6 +155,7 @@ Je kunt de bijl en markerblokken niet droppen, niet in een kist of hopper steken
 | `/gp list all` | Alle poorten op de server, met eigenaar (admin). |
 | `/gp info [id\|naam]` | Alle details van een poort. Zonder naam in een sessie: de gegevens van je sessie (ook nog niet bevestigde wijzigingen). |
 | `/gp repair [id\|naam]` | Vult ontbrekende blokken aan uit je inventory. Zonder naam: de poort die je nu bewerkt. Kan door de server uitgezet of beperkt zijn (`repair`-config). |
+| `/gp claim` | Haalt bewaarde blokken op (als er bij verwijderen geen plaats was voor kisten): zoveel kisten als hier passen, de rest blijft bewaard. |
 | `/gp remove [id\|naam]` | Verwijdert de poort; je krijgt je betaalde blokken terug. Zonder naam: de poort die je nu bewerkt (de sessie stopt). |
 | `/gp reload` | Herlaadt `config.yml` en de taalbestanden (admin). |
 | `/gp devstats` | Zet de dev-modus aan/uit (admin), zie [hieronder](#info-venster-en-dev-modus). |
@@ -202,7 +203,7 @@ Elke poort heeft een **id** dat uniek is op de hele server (`#12`) en een **naam
 Met `require-blocks: true` (standaard) kost een poort echte blokken:
 
 - **Bouwen** haalt de blokken uit je inventory. Heb je er te weinig, dan wordt het deel gebouwd dat je hebt (van onder naar boven) en is de poort **onvolledig**: ze werkt pas als ze af is (`/gp repair`).
-- **Verwijderen** geeft de **betaalde** blokken terug. Meer dan 60 blokken (`chest-threshold`)? Dan komen ze in een gewone kist naast je, die vanzelf verdwijnt zodra ze leeg is. Breek je de kist, dan valt de inhoud er gewoon uit.
+- **Verwijderen** geeft de **betaalde** blokken terug. Meer dan 60 blokken (`chest-threshold`)? Dan komen ze in een gewone kist naast je (zo nodig meerdere), die vanzelf verdwijnt zodra ze leeg is. Breek je de kist, dan valt de inhoud er gewoon uit. Is er rond je (3 blokken ver) geen plaats meer voor een kist, dan wordt de rest **bewaard** (ook na een herstart). Ga naar een open plek en typ `/gp claim`: er komen zoveel kisten als er passen, de rest blijft bewaard tot je opnieuw `/gp claim` typt. Bij het inloggen krijg je een herinnering.
 - **Creative:** met `creative-free: true` (standaard) bouw je in creative gratis en krijg je bij verwijderen dus ook **niets** terug.
 - Met `require-blocks: false` is alles gratis.
 
@@ -249,7 +250,7 @@ GatesPlus werkt met [LuckPerms](https://luckperms.net/) (via fabric-permissions-
 
 | Permissie | Standaard | Geeft toegang tot |
 |---|---|---|
-| `gatesplus.use` | iedereen | create, edit, confirm, cancel, set, list, info, repair |
+| `gatesplus.use` | iedereen | create, edit, confirm, cancel, set, list, info, repair, claim |
 | `gatesplus.remove` | iedereen | eigen poorten verwijderen |
 | `gatesplus.group` | iedereen | `/gp group ...` |
 | `gatesplus.get.marker` | iedereen | `/gp get markerblock` |

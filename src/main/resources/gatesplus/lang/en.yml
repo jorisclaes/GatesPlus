@@ -17,6 +17,7 @@ help: |-
   &e/gp list &7– your gates  &e/gp list all &7– all gates (admin)  &e/gp info [id|name] &7– details (no name: your session)
   &e/gp repair [id|name] &7– repair using blocks from your inventory (no name: the gate you are editing)
   &e/gp remove [id|name] &7– remove a gate (no name: the gate you are editing)
+  &e/gp claim &7– collect kept blocks (when there was no room for chests)
   &e/gp group create|delete|add|remove|list|members|gates|info &7– groups
 no_permission: "&cYou don't have permission to do that."
 
@@ -167,6 +168,14 @@ repair:
 
 chest:
   placed: "&eYour blocks are in a chest at &f{0} {1} {2}&e. The chest disappears once it is empty."
+  pending: "&eNo room for more chests: &f{0} &eblocks are kept for you. Go to an open spot and type &f/gp claim&e."
+
+claim:
+  none: "&7No blocks are waiting for you."
+  done: "&aAll your {0} kept blocks are now in chests."
+  partial: "&e{0} blocks are in chests; there was no room for the other &f{1}&e. Type &f/gp claim &eagain at an open spot."
+  no_room: "&cThere is no room for a chest here. &f{0} &cblocks are still waiting: go to an open spot and type /gp claim."
+  reminder: "&e&f{0} &eblocks of a removed gate are waiting for you: type &f/gp claim &eat an open spot."
 
 storage:
   error: "&cSaving failed, see the server log."

@@ -90,6 +90,8 @@ public class GatesPlus implements ModInitializer {
 				MarkerBlocks.removeItems(handler.player);
 			}
 			be.jorisclaes.gatesplus.network.Network.send(handler.player, gates.sessions().markersPayload());
+			int waiting = gates.returnChests().pendingCount(handler.player.getUUID());
+			if (waiting > 0) be.jorisclaes.gatesplus.util.Messages.send(handler.player, "claim.reminder", waiting);
 		});
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, srv) -> {
 			gates.sessions().onDisconnect(handler.player);

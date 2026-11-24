@@ -17,6 +17,7 @@ help: |-
   &e/gp list &7– jouw poorten  &e/gp list all &7– alle poorten (admin)  &e/gp info [id|naam] &7– details (zonder naam: je sessie)
   &e/gp repair [id|naam] &7– herstel met blokken uit je inventory (zonder naam: de poort die je bewerkt)
   &e/gp remove [id|naam] &7– verwijder een poort (zonder naam: de poort die je bewerkt)
+  &e/gp claim &7– bewaarde blokken ophalen (als er geen plaats was voor kisten)
   &e/gp group create|delete|add|remove|list|members|gates|info &7– groepen
 no_permission: "&cDaar heb je geen rechten voor."
 
@@ -167,6 +168,14 @@ repair:
 
 chest:
   placed: "&eJe blokken liggen in een kist op &f{0} {1} {2}&e. De kist verdwijnt als ze leeg is."
+  pending: "&eGeen plaats voor meer kisten: &f{0} &eblokken worden voor je bewaard. Ga naar een open plek en typ &f/gp claim&e."
+
+claim:
+  none: "&7Er wachten geen blokken op je."
+  done: "&aAl je {0} bewaarde blokken staan nu in kisten."
+  partial: "&e{0} blokken staan in kisten; er was geen plaats voor de overige &f{1}&e. Typ opnieuw &f/gp claim &eop een open plek."
+  no_room: "&cHier is geen plaats voor een kist. Er wachten nog &f{0} &cblokken: ga naar een open plek en typ /gp claim."
+  reminder: "&eEr wachten nog &f{0} &eblokken van een verwijderde poort op je: typ &f/gp claim &eop een open plek."
 
 storage:
   error: "&cOpslaan mislukt, zie de serverlog."

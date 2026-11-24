@@ -41,6 +41,12 @@ public interface GateStorage extends AutoCloseable {
 
 	void deleteReturnChest(String dimension, int x, int y, int z) throws StorageException;
 
+	/** Blocks waiting for /gp claim: owner -> (item id -> amount). */
+	java.util.Map<UUID, java.util.Map<String, Integer>> loadPendingReturns() throws StorageException;
+
+	/** Stores the amount of one item waiting for its owner; 0 deletes the row. */
+	void setPendingReturn(UUID owner, String item, int amount) throws StorageException;
+
 	@Override
 	void close();
 }

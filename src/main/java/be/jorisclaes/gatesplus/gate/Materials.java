@@ -72,7 +72,7 @@ public final class Materials {
 		for (int left = count; left > 0; left -= max) stacks.add(new ItemStack(item, Math.min(max, left)));
 
 		if (count > cfg.chestThreshold()) {
-			GatesPlus.get().gates().returnChests().spawn(level, player, stacks);
+			GatesPlus.get().gates().returnChests().give(level, player, stacks);
 			return;
 		}
 		for (ItemStack s : stacks) {

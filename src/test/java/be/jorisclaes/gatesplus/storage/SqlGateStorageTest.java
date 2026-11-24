@@ -95,6 +95,20 @@ class SqlGateStorageTest {
 	}
 
 	@Test
+	void pendingReturnsAreStoredUpdatedAndDeleted(@TempDir Path dir) throws Exception {
+		UUID owner = UUID.randomUUID();
+		try (SqlGateStorage s = SqlGateStorage.sqlite(dir.resolve("p.db"))) {
+			s.init();
+			s.setPendingReturn(owner, "minecraft:stone", 500);
+			s.setPendingReturn(owner, "minecraft:dirt", 64);
+			s.setPendingReturn(owner, "minecraft:stone", 200);
+			s.setPendingReturn(owner, "minecraft:dirt", 0);
+			var pending = s.loadPendingReturns();
+			assertEquals(java.util.Map.of("minecraft:stone", 200), pending.get(owner));
+		}
+	}
+
+	@Test
 	void migrationIsIdempotentAndRejectsNewerSchema(@TempDir Path dir) throws Exception {
 		Path db = dir.resolve("t.db");
 		try (SqlGateStorage s = SqlGateStorage.sqlite(db)) {

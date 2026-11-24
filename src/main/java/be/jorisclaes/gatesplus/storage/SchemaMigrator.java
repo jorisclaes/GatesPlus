@@ -22,7 +22,7 @@ public final class SchemaMigrator {
 	private static final Logger LOGGER = LoggerFactory.getLogger("gatesplus/storage");
 
 	/** Index i holds migration to version i+1. */
-	static final List<Function<SqlDialect, List<String>>> MIGRATIONS = List.of(SchemaMigrator::v1);
+	static final List<Function<SqlDialect, List<String>>> MIGRATIONS = List.of(SchemaMigrator::v1, SchemaMigrator::v2);
 
 	public static int latestVersion() {
 		return MIGRATIONS.size();
@@ -79,6 +79,16 @@ public final class SchemaMigrator {
 		try (Statement st = c.createStatement(); ResultSet rs = st.executeQuery("SELECT version FROM gp_schema_version")) {
 			return rs.next() ? rs.getInt(1) : 0;
 		}
+	}
+
+	/** V2: blocks that didn't fit in return chests, waiting for /gp claim. */
+	private static List<String> v2(SqlDialect d) {
+		return List.of(
+				"CREATE TABLE gp_pending_returns ("
+						+ "owner_uuid CHAR(36) NOT NULL, "
+						+ "item VARCHAR(128) NOT NULL, "
+						+ "amount INT NOT NULL, "
+						+ "PRIMARY KEY (owner_uuid, item))" + d.tableSuffix);
 	}
 
 	private static List<String> v1(SqlDialect d) {

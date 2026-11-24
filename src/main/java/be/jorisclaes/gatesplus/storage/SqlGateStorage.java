@@ -308,6 +308,55 @@ public final class SqlGateStorage implements GateStorage {
 		update("DELETE FROM gp_return_chests WHERE dimension = ? AND x = ? AND y = ? AND z = ?", dimension, x, y, z);
 	}
 
+	// ------------------------------------------------------------------ pending returns
+
+	@Override
+	public java.util.Map<UUID, java.util.Map<String, Integer>> loadPendingReturns() throws StorageException {
+		java.util.Map<UUID, java.util.Map<String, Integer>> out = new java.util.HashMap<>();
+		try (Connection c = dataSource.getConnection();
+				Statement st = c.createStatement();
+				ResultSet rs = st.executeQuery("SELECT owner_uuid, item, amount FROM gp_pending_returns")) {
+			while (rs.next()) {
+				out.computeIfAbsent(UUID.fromString(rs.getString(1)), k -> new java.util.LinkedHashMap<>())
+						.put(rs.getString(2), rs.getInt(3));
+			}
+		} catch (SQLException | IllegalArgumentException e) {
+			throw new StorageException("Loading pending returns failed: " + e.getMessage(), e);
+		}
+		return out;
+	}
+
+	@Override
+	public void setPendingReturn(UUID owner, String item, int amount) throws StorageException {
+		// delete + insert works the same on SQLite and MySQL (no dialect-specific upsert)
+		try (Connection c = dataSource.getConnection()) {
+			boolean auto = c.getAutoCommit();
+			c.setAutoCommit(false);
+			try (PreparedStatement del = c.prepareStatement("DELETE FROM gp_pending_returns WHERE owner_uuid = ? AND item = ?")) {
+				del.setString(1, owner.toString());
+				del.setString(2, item);
+				del.executeUpdate();
+				if (amount > 0) {
+					try (PreparedStatement ins = c.prepareStatement(
+							"INSERT INTO gp_pending_returns (owner_uuid, item, amount) VALUES (?, ?, ?)")) {
+						ins.setString(1, owner.toString());
+						ins.setString(2, item);
+						ins.setInt(3, amount);
+						ins.executeUpdate();
+					}
+				}
+				c.commit();
+			} catch (SQLException e) {
+				c.rollback();
+				throw e;
+			} finally {
+				c.setAutoCommit(auto);
+			}
+		} catch (SQLException e) {
+			throw new StorageException("Saving pending return failed: " + e.getMessage(), e);
+		}
+	}
+
 	private void update(String sql, Object... args) throws StorageException {
 		try (Connection c = dataSource.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
 			for (int i = 0; i < args.length; i++) ps.setObject(i + 1, args[i]);
