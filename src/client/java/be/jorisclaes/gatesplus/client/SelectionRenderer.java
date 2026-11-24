@@ -53,8 +53,7 @@ final class SelectionRenderer {
 
 		// the area the trigger may be in: while choosing it, and as long as none is set
 		if (box != null && (s.triggerMode() || s.trigger().isEmpty())) {
-			Gizmos.cuboid(box.inflate(s.triggerRange()), GizmoStyle.strokeAndFill(TRIGGER, 3f, alpha(TRIGGER, 0x14)))
-					.setAlwaysOnTop();
+			Gizmos.cuboid(box.inflate(s.triggerRange()), GizmoStyle.stroke(TRIGGER, 3f)).setAlwaysOnTop();
 		}
 		s.trigger().ifPresent(t -> {
 			double pulse = 0.5 + 0.5 * Math.sin(System.currentTimeMillis() / 200.0);
