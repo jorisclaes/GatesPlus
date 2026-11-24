@@ -42,7 +42,7 @@ Bouw poorten van (bijna) elk blok. Een poort gaat **vloeiend open en dicht met r
 >
 > | | Met client-mod | Zonder client-mod |
 > |---|---|---|
-> | Selectie | doorzichtige kaders (goud/rood/groen/blauw) | hoeken als echte markerblokken (gele "1" / rode "2"), groen glas = randen en diamant = trigger als nepblokken die alleen jij ziet; blokken in de weg blijven zichtbaar met een **rode gloei-omlijning** |
+> | Selectie | doorzichtige kaders (goud/rood/groen/cyaan) | hoeken als echte markerblokken (gele "1" / rode "2"), groen glas = randen en diamant = trigger als nepblokken die alleen jij ziet; blokken in de weg blijven zichtbaar met een **rode gloei-omlijning** |
 > | Info-venster / dev-paneel | HUD-venster rechtsboven | scorebord-zijbalk rechts |
 > | Markerblokken | de eigen markerblokken met "1"/"2" op de textuur, ook in je inventory en hand (de server zelf houdt beton) | gele/rode beton met een zwevend "1"/"2" |
 >
@@ -94,7 +94,7 @@ Tijdens `/gp create` of `/gp edit` heb je een gloeiende **houten bijl** (de sele
 | **Rechterklik** | Haalt het laatst gezette punt weg: eerst het trigger-blok, dan hoek 2, dan hoek 1. De marker van die hoek verdwijnt mee (een marker uit je inventory komt terug als item). |
 | **Linkerklik** in trigger-modus | Kiest het trigger-blok (na `/gp set trigger`). |
 
-Je ziet je selectie meteen: hoek 1 **goud**, hoek 2 **rood**, de rand van de poort **groen**, het trigger-blok **blauw** (pulserend). Blokken die het bouwen tegenhouden, worden meteen **rood** gemarkeerd (zonder client-mod: rode gloei-omlijning, ook door muren heen); haal ze weg en de markering verdwijnt vanzelf.
+Je ziet je selectie meteen: hoek 1 **goud**, hoek 2 **rood**, de rand van de poort **groen**, het trigger-blok **felcyaan** met een dikke rand en een pulserende witte omlijning (ook door muren heen). Blokken die het bouwen tegenhouden, worden meteen **rood** gemarkeerd (zonder client-mod: rode gloei-omlijning, ook door muren heen); haal ze weg en de markering verdwijnt vanzelf.
 
 ### Markerblokken
 

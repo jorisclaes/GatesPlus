@@ -12,13 +12,15 @@ import be.jorisclaes.gatesplus.network.SelectionSyncPayload;
 /**
  * Draws the wand selection with vanilla gizmos:
  * corner 1 gold, corner 2 red (both see-through so they stay visible), the box edges green,
- * the trigger block pulsing blue with a line to the gate, and blocking positions red.
+ * the trigger block bright cyan with a pulsing white outline and a line to the gate, and blocking positions red.
  */
 final class SelectionRenderer {
 	private static final int GOLD = 0xFFFFC21A;
 	private static final int RED = 0xFFFF3B30;
 	private static final int GREEN = 0xFF4CFF5A;
 	private static final int BLUE = 0xFF3FA9FF;
+	private static final int TRIGGER = 0xFF00E5FF;
+	private static final int WHITE = 0xFFFFFFFF;
 
 	private SelectionRenderer() {}
 
@@ -54,13 +56,17 @@ final class SelectionRenderer {
 		}
 		s.trigger().ifPresent(t -> {
 			double pulse = 0.5 + 0.5 * Math.sin(System.currentTimeMillis() / 200.0);
-			int fillAlpha = 0x30 + (int) (pulse * 0x60);
-			Gizmos.cuboid(new AABB(t).inflate(0.03), GizmoStyle.strokeAndFill(BLUE, 4f, alpha(BLUE, fillAlpha))).setAlwaysOnTop();
+			int fillAlpha = 0x50 + (int) (pulse * 0x60);
+			// thick bright outline + fill, always on top so it shows through walls
+			Gizmos.cuboid(new AABB(t).inflate(0.03), GizmoStyle.strokeAndFill(TRIGGER, 7f, alpha(TRIGGER, fillAlpha))).setAlwaysOnTop();
+			// a second, white outline that pulses outward, so the trigger stands out from the other markers
+			double grow = 0.08 + pulse * 0.22;
+			Gizmos.cuboid(new AABB(t).inflate(grow), GizmoStyle.stroke(alpha(WHITE, 0x80 + (int) ((1 - pulse) * 0x7F)), 3f)).setAlwaysOnTop();
 			if (c1 != null && c2 != null) {
 				AABB b = AABB.encapsulatingFullBlocks(c1, c2);
 				Vec3 from = Vec3.atCenterOf(t);
 				Vec3 to = new Vec3(clamp(from.x, b.minX, b.maxX), clamp(from.y, b.minY, b.maxY), clamp(from.z, b.minZ, b.maxZ));
-				Gizmos.line(from, to, BLUE, 2f);
+				Gizmos.line(from, to, TRIGGER, 3f);
 			}
 		});
 
