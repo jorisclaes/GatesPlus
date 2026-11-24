@@ -63,6 +63,17 @@ public final class CreateSession {
 	public long lastActivityMillis() { return lastActivityMillis; }
 
 	private long lastClickMillis;
+	private int lastRightClickTick = Integer.MIN_VALUE;
+
+	/**
+	 * A vanilla client right-clicking a block with the axe sends two packets (use on block, then use
+	 * item) in the same tick; only the first one may undo a point.
+	 */
+	public boolean acceptRightClick(int serverTick) {
+		if (serverTick == lastRightClickTick) return false;
+		lastRightClickTick = serverTick;
+		return true;
+	}
 
 	/**
 	 * A marker block placed during this session, removed again when the session ends.

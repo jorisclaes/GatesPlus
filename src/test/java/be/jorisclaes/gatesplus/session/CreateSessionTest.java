@@ -34,6 +34,14 @@ class CreateSessionTest {
 	}
 
 	@Test
+	void oneRightClickPerTick() {
+		CreateSession s = session();
+		org.junit.jupiter.api.Assertions.assertTrue(s.acceptRightClick(100));
+		org.junit.jupiter.api.Assertions.assertFalse(s.acceptRightClick(100));
+		org.junit.jupiter.api.Assertions.assertTrue(s.acceptRightClick(101));
+	}
+
+	@Test
 	void thirdCornerClickReplacesCorner2() {
 		CreateSession s = session();
 		s.clickCorner(new BlockPos(0, 0, 0));

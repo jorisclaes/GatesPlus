@@ -420,6 +420,7 @@ public final class SessionManager {
 			placeWandMarker(player, level, s, pos,
 					r == CreateSession.SetResult.CORNER1 ? CreateSession.Point.CORNER1 : CreateSession.Point.CORNER2);
 		}
+		removeStaleMarkers(player, s);
 		String key = r == CreateSession.SetResult.CORNER1 ? "wand.corner1" : "wand.corner2";
 		if (s.hasBox()) {
 			Messages.actionBar(player, key + "_box", pos.getX(), pos.getY(), pos.getZ(), suffix,
@@ -438,16 +439,10 @@ public final class SessionManager {
 			Messages.actionBar(player, "wand.no_session");
 			return;
 		}
+		if (!s.acceptRightClick(player.level().getServer().getTickCount())) return;
 		invalid.remove(player.getUUID());
 		CreateSession.Point p = s.undo();
-		if (p != null && p != CreateSession.Point.TRIGGER) {
-			CreateSession.PlacedMarker m = s.placedMarker(p);
-			if (m != null && m.fromWand()) {
-				s.removePlacedMarker(p);
-				takeBack(m);
-				broadcastMarkers();
-			}
-		}
+		removeStaleMarkers(player, s);
 		if (p == null) Messages.actionBar(player, "wand.nothing_to_undo");
 		else Messages.actionBar(player, "wand.undo." + p.name().toLowerCase(java.util.Locale.ROOT));
 		sync(player);
@@ -474,6 +469,27 @@ public final class SessionManager {
 			s.putPlacedMarker(corner, level, pos, null, label, true);
 		}
 		broadcastMarkers();
+	}
+
+	/**
+	 * Removes placed markers that no longer mark their corner (the corner was undone or moved), so
+	 * a marker in the world always means "this corner is here". Markers placed from an item come
+	 * back as item. With session.marker-sets-corner off, item markers only mark a spot and stay.
+	 */
+	private void removeStaleMarkers(ServerPlayer player, CreateSession s) {
+		boolean itemsSetCorner = GatesPlus.get().config().session().markerSetsCorner();
+		boolean changed = false;
+		for (CreateSession.Point corner : new CreateSession.Point[] { CreateSession.Point.CORNER1, CreateSession.Point.CORNER2 }) {
+			CreateSession.PlacedMarker m = s.placedMarker(corner);
+			if (m == null || (!m.fromWand() && !itemsSetCorner)) continue;
+			BlockPos selected = corner == CreateSession.Point.CORNER1 ? s.corner1() : s.corner2();
+			if (m.pos().equals(selected)) continue;
+			s.removePlacedMarker(corner);
+			takeBack(m);
+			if (!m.fromWand()) MarkerBlocks.giveBack(player, corner);
+			changed = true;
+		}
+		if (changed) broadcastMarkers();
 	}
 
 	/** A temporary gate holding just the session box (for distance checks). */
