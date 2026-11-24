@@ -107,7 +107,7 @@ public final class SessionManager {
 		s.redstoneInverted = false;
 		s.groupId = null;
 		sessions.put(player.getUUID(), s);
-		Wand.give(player);
+		giveTools(player);
 		sync(player);
 		return s;
 	}
@@ -128,9 +128,18 @@ public final class SessionManager {
 		s.groupId = gate.groupId();
 		sessions.put(player.getUUID(), s);
 		service.lock(gate);
-		Wand.give(player);
+		giveTools(player);
 		sync(player);
 		return s;
+	}
+
+	/**
+	 * The selection tool of config session.selection-tool: the axe (axe/both), or the two marker
+	 * blocks instead of the axe (markers).
+	 */
+	private static void giveTools(ServerPlayer player) {
+		if (GatesPlus.get().config().session().selectionTool().axe()) Wand.give(player);
+		else MarkerBlocks.giveSet(player);
 	}
 
 	/** Ends the session: removes the wand, markers and panel. */
@@ -304,7 +313,7 @@ public final class SessionManager {
 		s.touch();
 
 		// config session.marker-sets-corner: false = the marker only marks, the wand sets the corner
-		if (!GatesPlus.get().config().session().markerSetsCorner()) return true;
+		if (!GatesPlus.get().config().session().markersSetCorner()) return true;
 
 		invalid.remove(player.getUUID());
 		boolean hadBox = s.hasBox();
@@ -390,18 +399,7 @@ public final class SessionManager {
 		invalid.remove(player.getUUID());
 
 		if (s.mode() == CreateSession.Mode.TRIGGER) {
-			BlockState state = level.getBlockState(clicked);
-			Gate tmp = boxOf(s);
-			int max = GatesPlus.get().config().limits().maxTriggerDistance();
-			if (tmp.contains(clicked.getX(), clicked.getY(), clicked.getZ())) {
-				Messages.actionBar(player, "trigger.inside_gate");
-			} else if (be.jorisclaes.gatesplus.gate.GateGeometry.distanceToBox(tmp, clicked.getX(), clicked.getY(), clicked.getZ()) > max) {
-				Messages.actionBar(player, "trigger.too_far", max);
-			} else {
-				CreateSession.SetResult r = s.clickTrigger(clicked, BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString());
-				Messages.actionBar(player, r == CreateSession.SetResult.TRIGGER ? "wand.trigger_set" : "wand.trigger_replaced",
-						clicked.getX(), clicked.getY(), clicked.getZ());
-			}
+			trySetTrigger(player, s, clicked);
 			sync(player);
 			return;
 		}
@@ -430,6 +428,53 @@ public final class SessionManager {
 		}
 		if (!hadBox && s.hasBox()) Messages.send(player, "wand.hint_trigger");
 		sync(player);
+	}
+
+	/**
+	 * Makes the block at pos the trigger (wand click in trigger mode, or the block the player looks
+	 * at with /gp set trigger when markers are the only selection tool). Needs both corners.
+	 * @return true when the trigger was set
+	 */
+	private boolean trySetTrigger(ServerPlayer player, CreateSession s, BlockPos pos) {
+		ServerLevel level = player.level();
+		BlockState state = level.getBlockState(pos);
+		Gate tmp = boxOf(s);
+		int max = GatesPlus.get().config().limits().maxTriggerDistance();
+		if (tmp.contains(pos.getX(), pos.getY(), pos.getZ())) {
+			Messages.actionBar(player, "trigger.inside_gate");
+			return false;
+		}
+		if (be.jorisclaes.gatesplus.gate.GateGeometry.distanceToBox(tmp, pos.getX(), pos.getY(), pos.getZ()) > max) {
+			Messages.actionBar(player, "trigger.too_far", max);
+			return false;
+		}
+		CreateSession.SetResult r = s.clickTrigger(pos, BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString());
+		Messages.actionBar(player, r == CreateSession.SetResult.TRIGGER ? "wand.trigger_set" : "wand.trigger_replaced",
+				pos.getX(), pos.getY(), pos.getZ());
+		return true;
+	}
+
+	/**
+	 * /gp set trigger without the axe: the block the player looks at becomes the trigger.
+	 * @return false when the player looks at no block or the block can't be the trigger
+	 */
+	public boolean setTriggerLookedAt(ServerPlayer player) {
+		CreateSession s = get(player);
+		if (s == null || !s.hasBox()) return false;
+		String dim = GateManager.dimensionId(player.level());
+		if (s.dimension() != null && !s.dimension().equals(dim)) {
+			Messages.actionBar(player, "wand.other_dimension");
+			return false;
+		}
+		net.minecraft.world.phys.HitResult hit = player.pick(player.blockInteractionRange(), 1.0f, false);
+		if (!(hit instanceof net.minecraft.world.phys.BlockHitResult bh) || hit.getType() != net.minecraft.world.phys.HitResult.Type.BLOCK) {
+			Messages.send(player, "set.trigger.look_at");
+			return false;
+		}
+		invalid.remove(player.getUUID());
+		boolean ok = trySetTrigger(player, s, bh.getBlockPos());
+		sync(player);
+		return ok;
 	}
 
 	/** Right-click with the wand: undo the last point. */
@@ -477,7 +522,7 @@ public final class SessionManager {
 	 * back as item. With session.marker-sets-corner off, item markers only mark a spot and stay.
 	 */
 	private void removeStaleMarkers(ServerPlayer player, CreateSession s) {
-		boolean itemsSetCorner = GatesPlus.get().config().session().markerSetsCorner();
+		boolean itemsSetCorner = GatesPlus.get().config().session().markersSetCorner();
 		boolean changed = false;
 		for (CreateSession.Point corner : new CreateSession.Point[] { CreateSession.Point.CORNER1, CreateSession.Point.CORNER2 }) {
 			CreateSession.PlacedMarker m = s.placedMarker(corner);

@@ -98,8 +98,8 @@ public final class InfoPanel {
 	public static String statusLabel(ServerPlayer p, GateStatus status) {
 		return switch (status) {
 			case OK -> "§a" + Messages.raw(p, "panel.status.ok");
-			case INCOMPLETE -> "§e" + Messages.raw(p, "panel.status.incomplete");
-			case BROKEN -> "§c" + Messages.raw(p, "panel.status.broken");
+			case INCOMPLETE -> "§e" + Messages.raw(p, GateService.repairKey("panel.status.incomplete"));
+			case BROKEN -> "§c" + Messages.raw(p, GateService.repairKey("panel.status.broken"));
 			case NO_TRIGGER -> "§c" + Messages.raw(p, "panel.status.no_trigger");
 		};
 	}

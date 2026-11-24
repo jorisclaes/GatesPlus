@@ -73,6 +73,16 @@ SQLite, MySQL, YAML en de LuckPerms-koppeling zitten al in de jar; je hoeft niet
 
 Zet nu een hendel op (of naast) het trigger-blok. Hendel aan = poort open, hendel uit = poort dicht.
 
+**Welk gereedschap?** De serverbeheerder kiest met `session.selection-tool`:
+
+| Waarde | Wat je krijgt bij `/gp create` / `/gp edit` | Trigger kiezen |
+|---|---|---|
+| `both` (standaard) | de selectiebijl; markerblokken haal je met `/gp get markerblock` | `/gp set trigger` + linkerklik met de bijl |
+| `axe` | alleen de selectiebijl (`/gp get markerblock` staat uit) | `/gp set trigger` + linkerklik met de bijl |
+| `markers` | meteen de twee markerblokken, geen bijl | kijk naar het blok en typ `/gp set trigger` |
+
+Met alleen markers zet het plaatsen van een marker altijd meteen de hoek, en haalt kapotslaan die hoek weer weg (er is geen bijl om ongedaan te maken).
+
 ## De selectiebijl en markerblokken
 
 Tijdens `/gp create` of `/gp edit` heb je een gloeiende **houten bijl** (de selectiebijl).
@@ -120,7 +130,7 @@ Je kunt de bijl en markerblokken niet droppen, niet in een kist of hopper steken
 | `/gp edit <id\|naam>` | Start een bewerk-sessie voor een bestaande poort; alles wat je met `/gp set` aanpast, wordt pas opgeslagen bij `/gp confirm`. |
 | `/gp confirm <naam>` | Bouwt de poort (bij `/gp edit`: `/gp confirm` of `/gp confirm <nieuwe naam>`). |
 | `/gp cancel` | Stopt de sessie zonder iets te veranderen. |
-| `/gp get markerblock` | Geeft de twee markerblokken (alleen in een sessie). |
+| `/gp get markerblock` | Geeft de twee markerblokken (alleen in een sessie; niet als `session.selection-tool: axe`). |
 
 ### Instellingen (tijdens `/gp create` of `/gp edit`)
 
@@ -143,9 +153,9 @@ Je kunt de bijl en markerblokken niet droppen, niet in een kist of hopper steken
 | `/gp list` | Jouw poorten en die van je groepen. Naam **groen** = werkt, **rood** = kapot/onvolledig/trigger weg. |
 | `/gp list blocks` | Blokken waarvan je een poort mag maken. |
 | `/gp list all` | Alle poorten op de server, met eigenaar (admin). |
-| `/gp info <id\|naam>` | Alle details van een poort. |
-| `/gp repair [id\|naam]` | Vult ontbrekende blokken aan uit je inventory. Zonder naam: de poort die je nu bewerkt. |
-| `/gp remove <id\|naam>` | Verwijdert de poort; je krijgt je betaalde blokken terug. |
+| `/gp info [id\|naam]` | Alle details van een poort. Zonder naam in een sessie: de gegevens van je sessie (ook nog niet bevestigde wijzigingen). |
+| `/gp repair [id\|naam]` | Vult ontbrekende blokken aan uit je inventory. Zonder naam: de poort die je nu bewerkt. Kan door de server uitgezet of beperkt zijn (`repair`-config). |
+| `/gp remove [id\|naam]` | Verwijdert de poort; je krijgt je betaalde blokken terug. Zonder naam: de poort die je nu bewerkt (de sessie stopt). |
 | `/gp reload` | Herlaadt `config.yml` en de taalbestanden (admin). |
 | `/gp devstats` | Zet de dev-modus aan/uit (admin), zie [hieronder](#info-venster-en-dev-modus). |
 
@@ -206,6 +216,10 @@ Met `require-blocks: true` (standaard) kost een poort echte blokken:
 | **Trigger ontbreekt** | Het trigger-blok is weg; de poort staat open. | Zet er een blok terug, of kies een nieuw met `/gp edit`. |
 
 `/gp repair` vult de gaten van onder naar boven met blokken uit je inventory. Heb je er te weinig, dan wordt wat je hebt geplaatst en zie je hoeveel er nog ontbreken (`12 / 16`). Zodra alles er weer staat, werkt de poort meteen.
+
+De serverbeheerder kan `/gp repair` beperken:
+- `repair.max-distance` – je moet binnen zoveel blokken van de poort staan (`0` = onbeperkt; `gatesplus.bypass.limits` negeert dit).
+- `repair.command-enabled: false` – het commando staat uit; vul de gaten dan **met de hand** met het juiste blok (meldingen en status zeggen dan "vul met de hand").
 
 ## Bescherming: onbreekbaar en vuurvast
 
@@ -286,6 +300,7 @@ session:
   timeout-minutes: 10
   marker-sets-corner: true   # markerblok plaatsen zet meteen de hoek (false = klik erop met de bijl)
   custom-marker-blocks: false # true = eigen markerblokken; dan heeft ELKE speler de client-mod nodig (herstart nodig)
+  selection-tool: both       # axe | markers | both – selecteren met de bijl, de markerblokken of allebei
 
 defaults:                    # standaardwaarden voor een nieuwe poort
   block: minecraft:dirt
@@ -306,6 +321,10 @@ redstone:
 
 protection:
   allow-op-break: false
+
+repair:
+  command-enabled: true      # false = /gp repair uit, poorten alleen met de hand herstellen
+  max-distance: 0            # max afstand speler–poort voor /gp repair (0 = onbeperkt)
 
 materials:
   require-blocks: true

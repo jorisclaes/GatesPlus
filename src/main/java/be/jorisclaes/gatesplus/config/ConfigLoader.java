@@ -120,14 +120,17 @@ public final class ConfigLoader {
 				n.strList("non-full-block-whitelist", List.of("minecraft:iron_bars", "minecraft:glass_pane")),
 				new Session(n.child("session").integer("timeout-minutes", 10, 1, 1440),
 						n.child("session").bool("marker-sets-corner", true),
-						n.child("session").bool("custom-marker-blocks", false)),
+						n.child("session").bool("custom-marker-blocks", false),
+						n.child("session").enumValue("selection-tool", SelectionTool.class, SelectionTool.BOTH)),
 				defaults,
 				new Animation(a.bool("enabled", true), a.bool("allow-player-toggle", true)),
 				new Redstone(r.integer("check-interval-ticks", 4, 1, 100), r.bool("allow-inverted", true),
 						r.enumValue("entity-in-gate", GatesPlusConfig.EntityInGate.class, GatesPlusConfig.EntityInGate.SUFFOCATE)),
 				new Protection(n.child("protection").bool("allow-op-break", false)),
 				new Materials(m.bool("require-blocks", true), m.bool("creative-free", true),
-						m.bool("return-on-remove", true), m.integer("chest-threshold", 60, 0, Integer.MAX_VALUE)));
+						m.bool("return-on-remove", true), m.integer("chest-threshold", 60, 0, Integer.MAX_VALUE)),
+				new Repair(n.child("repair").bool("command-enabled", true),
+						n.child("repair").integer("max-distance", 0, 0, 100_000)));
 	}
 
 	/** Small typed view over a YAML map that records warnings instead of throwing. */

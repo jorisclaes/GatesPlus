@@ -65,6 +65,11 @@ non-full-block-whitelist:
 session:
   # sessie stopt automatisch na zoveel minuten zonder activiteit
   timeout-minutes: 10
+  # Selectiegereedschap: axe = alleen de bijl, markers = alleen de markerblokken,
+  # both = allebei (bij /gp create krijg je de bijl, markers via /gp get markerblock).
+  # Met markers krijg je bij /gp create meteen de 2 markerblokken; de trigger kies je dan
+  # door ernaar te kijken en /gp set trigger te typen.
+  selection-tool: both
   # true = een markerblok plaatsen zet meteen zijn hoek (zoals klikken met de bijl)
   # false = markers zijn alleen een hulpmiddel; klik erop met de bijl om de hoek te zetten
   marker-sets-corner: true
@@ -104,6 +109,13 @@ redstone:
 protection:
   # admins (permissie gatesplus.admin.break) mogen onbreekbare poorten breken in creative
   allow-op-break: false
+
+repair:
+  # false = /gp repair staat uit: een kapotte of onvolledige poort moet met de hand
+  #         hersteld worden (de gaten vullen met het juiste blok)
+  command-enabled: true
+  # maximale afstand (in blokken) tussen speler en poort voor /gp repair; 0 = onbeperkt
+  max-distance: 0
 
 materials:
   # false = bouwen/repareren is gratis

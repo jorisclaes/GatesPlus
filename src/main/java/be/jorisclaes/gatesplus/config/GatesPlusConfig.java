@@ -16,7 +16,8 @@ public record GatesPlusConfig(
 		Animation animation,
 		Redstone redstone,
 		Protection protection,
-		Materials materials) {
+		Materials materials,
+		Repair repair) {
 
 	public enum StorageType { SQLITE, MYSQL }
 
@@ -31,7 +32,21 @@ public record GatesPlusConfig(
 	 * @param customMarkerBlocks own marker blocks (every player needs the client mod); false = vanilla
 	 *                           blocks with a floating label, so vanilla clients can join. Needs a restart.
 	 */
-	public record Session(int timeoutMinutes, boolean markerSetsCorner, boolean customMarkerBlocks) {}
+	public record Session(int timeoutMinutes, boolean markerSetsCorner, boolean customMarkerBlocks,
+			SelectionTool selectionTool) {
+		/** Placing a marker sets its corner; always so when markers are the only selection tool. */
+		public boolean markersSetCorner() {
+			return markerSetsCorner || selectionTool == SelectionTool.MARKERS;
+		}
+	}
+
+	/** How players select a gate: the axe, the marker blocks, or both. */
+	public enum SelectionTool {
+		AXE, MARKERS, BOTH;
+
+		public boolean axe() { return this != MARKERS; }
+		public boolean markers() { return this != AXE; }
+	}
 
 	public record Defaults(String block, boolean indestructible, boolean fireproof, boolean animationEnabled,
 			String direction, int animationTicks) {}
@@ -53,4 +68,10 @@ public record GatesPlusConfig(
 	public record Protection(boolean allowOpBreak) {}
 
 	public record Materials(boolean requireBlocks, boolean creativeFree, boolean returnOnRemove, int chestThreshold) {}
+
+	/**
+	 * @param commandEnabled false = /gp repair is off; holes must be filled by hand with the right block
+	 * @param maxDistance    max distance (blocks) between the player and the gate for /gp repair; 0 = unlimited
+	 */
+	public record Repair(boolean commandEnabled, int maxDistance) {}
 }

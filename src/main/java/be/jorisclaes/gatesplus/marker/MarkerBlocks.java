@@ -156,6 +156,18 @@ public final class MarkerBlocks {
 		if (player.getInventory().add(create(player, corner))) player.containerMenu.broadcastChanges();
 	}
 
+	/** Gives one top-left (1) and one bottom-right (2) marker; a full inventory drops them at the player. */
+	public static void giveSet(ServerPlayer player) {
+		for (CreateSession.Point corner : new CreateSession.Point[] { CreateSession.Point.CORNER1, CreateSession.Point.CORNER2 }) {
+			if (hasItem(player, corner)) continue;
+			ItemStack stack = create(player, corner);
+			if (!player.getInventory().add(stack) || !stack.isEmpty()) {
+				be.jorisclaes.gatesplus.gate.ReturnChestTracker.drop(player.level(), player, stack);
+			}
+		}
+		player.containerMenu.broadcastChanges();
+	}
+
 	/** Removes every marker item from the inventory and the cursor (end of a session). */
 	public static void removeItems(ServerPlayer player) {
 		var inv = player.getInventory();

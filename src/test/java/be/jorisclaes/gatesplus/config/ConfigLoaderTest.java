@@ -65,6 +65,28 @@ class ConfigLoaderTest {
 	}
 
 	@Test
+	void selectionToolAndRepairOptions() {
+		GatesPlusConfig def = ConfigLoader.parse(new StringReader(""), new ArrayList<>());
+		assertEquals(GatesPlusConfig.SelectionTool.BOTH, def.session().selectionTool());
+		assertTrue(def.repair().commandEnabled());
+		assertEquals(0, def.repair().maxDistance());
+
+		GatesPlusConfig cfg = ConfigLoader.parse(new StringReader("""
+				session:
+				  selection-tool: markers
+				  marker-sets-corner: false
+				repair:
+				  command-enabled: false
+				  max-distance: 12
+				"""), new ArrayList<>());
+		assertEquals(GatesPlusConfig.SelectionTool.MARKERS, cfg.session().selectionTool());
+		assertFalse(cfg.session().selectionTool().axe());
+		assertTrue(cfg.session().markersSetCorner(), "markers-only always sets the corner");
+		assertFalse(cfg.repair().commandEnabled());
+		assertEquals(12, cfg.repair().maxDistance());
+	}
+
+	@Test
 	void customMarkerBlocksCanBeTurnedOn() {
 		GatesPlusConfig cfg = ConfigLoader.parse(new StringReader("""
 				session:

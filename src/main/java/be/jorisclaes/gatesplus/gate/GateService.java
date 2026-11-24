@@ -293,7 +293,7 @@ public final class GateService {
 		if (gate.status() != GateStatus.NO_TRIGGER) gate.setStatus(GateStatus.BROKEN);
 		save(gate);
 		// no chat message for normal players: /gp list shows the gate in red; dev mode still gets it
-		notifyGateDev(gate, "gate.broken", gate.name(), gate.placedCount(), gate.totalCount());
+		notifyGateDev(gate, repairKey("gate.broken"), gate.name(), gate.placedCount(), gate.totalCount());
 	}
 
 	public void markNoTrigger(ServerLevel level, Gate gate) {
@@ -580,7 +580,7 @@ public final class GateService {
 		placeBlocksUpTo(level, cand, cand.placedCount());
 
 		Messages.send(player, "confirm.created", cand.name(), cand.id());
-		if (!complete) Messages.send(player, "gate.incomplete", cand.name(), cand.placedCount(), cand.totalCount());
+		if (!complete) Messages.send(player, repairKey("gate.incomplete"), cand.name(), cand.placedCount(), cand.totalCount());
 		return true;
 	}
 
@@ -624,7 +624,7 @@ public final class GateService {
 		save(gate);
 
 		Messages.send(player, "confirm.updated", gate.name(), gate.id());
-		if (!complete) Messages.send(player, "gate.incomplete", gate.name(), gate.placedCount(), gate.totalCount());
+		if (!complete) Messages.send(player, repairKey("gate.incomplete"), gate.name(), gate.placedCount(), gate.totalCount());
 		return true;
 	}
 
@@ -649,6 +649,14 @@ public final class GateService {
 		lastVerify.remove(gate.id());
 		int id = gate.id();
 		GatesPlus.get().storage().run(s -> s.deleteGate(id));
+	}
+
+	/**
+	 * Message key that tells how to repair: with repair.command-enabled off the "_manual" variant
+	 * (fill the holes by hand) instead of the one pointing at /gp repair.
+	 */
+	public static String repairKey(String key) {
+		return GatesPlus.get().config().repair().commandEnabled() ? key : key + "_manual";
 	}
 
 	public void repair(ServerPlayer player, Gate gate) {

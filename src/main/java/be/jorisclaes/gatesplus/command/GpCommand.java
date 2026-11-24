@@ -18,17 +18,18 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.ItemStack;
 
 import be.jorisclaes.gatesplus.GatesPlus;
 import be.jorisclaes.gatesplus.gate.BlockFilter;
 import be.jorisclaes.gatesplus.gate.Gate;
 import be.jorisclaes.gatesplus.gate.GateDirection;
+import be.jorisclaes.gatesplus.gate.GateGeometry;
+import be.jorisclaes.gatesplus.gate.GateManager;
 import be.jorisclaes.gatesplus.gate.GateService;
 import be.jorisclaes.gatesplus.gate.InfoPanel;
-import be.jorisclaes.gatesplus.gate.ReturnChestTracker;
 import be.jorisclaes.gatesplus.marker.MarkerBlocks;
 import be.jorisclaes.gatesplus.group.Group;
 import be.jorisclaes.gatesplus.network.Network;
@@ -84,9 +85,12 @@ public final class GpCommand {
 						.executes(GpCommand::list)
 						.then(literal("blocks").executes(GpCommand::listBlocks))
 						.then(literal("all").requires(Perms.ADMIN_EDIT.require()).executes(GpCommand::listAll)))
-				.then(literal("info").then(argument("gate", StringArgumentType.word()).suggests(VISIBLE_GATES)
-						.executes(GpCommand::info)))
+				.then(literal("info")
+						.executes(GpCommand::infoSession)
+						.then(argument("gate", StringArgumentType.word()).suggests(VISIBLE_GATES)
+								.executes(GpCommand::info)))
 				.then(literal("remove").requires(Perms.REMOVE.require())
+						.executes(GpCommand::removeSession)
 						.then(argument("gate", StringArgumentType.word()).suggests(REMOVABLE_GATES).executes(GpCommand::remove)))
 				.then(literal("repair")
 						.executes(GpCommand::repairSession)
@@ -152,7 +156,7 @@ public final class GpCommand {
 			return 0;
 		}
 		gates().sessions().startCreate(p);
-		Messages.send(p, "create.started");
+		Messages.send(p, GatesPlus.get().config().session().selectionTool().axe() ? "create.started" : "create.started_markers");
 		if (!Network.hasClientMod(p)) Messages.send(p, "create.no_client_mod");
 		return 1;
 	}
@@ -251,10 +255,15 @@ public final class GpCommand {
 		ServerPlayer p = player(c);
 		CreateSession s = session(p);
 		if (s == null) return 0;
-		if (!s.enterTriggerMode()) {
+		if (!s.hasBox()) {
 			Messages.send(p, "set.trigger.need_corners");
 			return 0;
 		}
+		// config session.selection-tool: markers = no axe; the block the player looks at becomes the trigger
+		if (!GatesPlus.get().config().session().selectionTool().axe()) {
+			return gates().sessions().setTriggerLookedAt(p) ? 1 : 0;
+		}
+		s.enterTriggerMode();
 		be.jorisclaes.gatesplus.wand.Wand.give(p);
 		Messages.send(p, "set.trigger.mode", GatesPlus.get().config().limits().maxTriggerDistance());
 		gates().sessions().sync(p);
@@ -374,16 +383,17 @@ public final class GpCommand {
 	private static int getMarkers(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
 		ServerPlayer p = player(c);
 		// marker blocks are a selection tool: only while creating or editing a gate
+		var cfg = GatesPlus.get().config().session();
+		if (!cfg.selectionTool().markers()) {
+			Messages.send(p, "get.marker.disabled");
+			return 0;
+		}
 		if (gates().sessions().get(p) == null) {
 			Messages.send(p, "get.marker.no_session");
 			return 0;
 		}
-		for (var corner : be.jorisclaes.gatesplus.session.CreateSession.Point.values()) {
-			if (corner == be.jorisclaes.gatesplus.session.CreateSession.Point.TRIGGER) continue;
-			ItemStack stack = MarkerBlocks.create(p, corner);
-			if (!p.getInventory().add(stack) || !stack.isEmpty()) ReturnChestTracker.drop(p.level(), p, stack);
-		}
-		Messages.send(p, GatesPlus.get().config().session().markerSetsCorner() ? "get.marker.done" : "get.marker.done_click");
+		MarkerBlocks.giveSet(p);
+		Messages.send(p, cfg.markersSetCorner() ? "get.marker.done" : "get.marker.done_click");
 		return 1;
 	}
 
@@ -403,15 +413,42 @@ public final class GpCommand {
 		return 1;
 	}
 
+	/** /gp info without a name: the gate of the player's session (with its unsaved changes). */
+	private static int infoSession(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
+		ServerPlayer p = player(c);
+		CreateSession s = gates().sessions().get(p);
+		if (s == null) {
+			Messages.send(p, "info.need_gate");
+			return 0;
+		}
+		var panel = InfoPanel.forSession(p, s);
+		p.sendSystemMessage(Component.literal("§6" + panel.title()));
+		for (String row : panel.rows()) p.sendSystemMessage(Component.literal("§7" + row.replace("\t", ": §f")));
+		return 1;
+	}
+
+	/** /gp remove without a name: the gate of the player's own edit session. */
+	private static int removeSession(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
+		ServerPlayer p = player(c);
+		Gate g = sessionGate(p, "rm.need_gate", "rm.new_gate");
+		return g == null ? 0 : doRemove(p, g);
+	}
+
 	private static int remove(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
 		ServerPlayer p = player(c);
+		Gate g = gates().resolve(p, str(c, "gate"), Perms.ADMIN_REMOVE.check(p));
+		return g == null ? 0 : doRemove(p, g);
+	}
+
+	private static int doRemove(ServerPlayer p, Gate g) {
 		boolean admin = Perms.ADMIN_REMOVE.check(p);
-		Gate g = gates().resolve(p, str(c, "gate"), admin);
-		if (g == null) return 0;
 		if (!admin && !gates().groups().canRemove(g, p.getUUID())) {
 			Messages.send(p, "rm.not_owner", g.name());
 			return 0;
 		}
+		// own edit session of this gate: end it quietly first (markers give gate blocks back)
+		CreateSession own = gates().sessions().get(p);
+		if (own != null && own.type() == CreateSession.Type.EDIT && own.gateId() == g.id()) gates().sessions().end(p, false);
 		gates().remove(p, g);
 		Messages.send(p, "rm.done", g.name(), g.id());
 		return 1;
@@ -420,25 +457,40 @@ public final class GpCommand {
 	/** /gp repair without a name: repairs the gate of the player's own edit session. */
 	private static int repairSession(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
 		ServerPlayer p = player(c);
+		if (!repairCommandAllowed(p)) return 0;
+		Gate g = sessionGate(p, "repair.need_gate", "repair.new_gate");
+		return g == null ? 0 : doRepair(p, g);
+	}
+
+	/**
+	 * The gate of the player's edit session, or null (with a message): noSession when there is no
+	 * session, newGate when the session creates a gate that doesn't exist yet.
+	 */
+	private static Gate sessionGate(ServerPlayer p, String noSession, String newGate) {
 		CreateSession s = gates().sessions().get(p);
 		if (s == null) {
-			Messages.send(p, "repair.need_gate");
-			return 0;
+			Messages.send(p, noSession);
+			return null;
 		}
 		if (s.type() == CreateSession.Type.CREATE) {
-			Messages.send(p, "repair.new_gate");
-			return 0;
+			Messages.send(p, newGate);
+			return null;
 		}
 		Gate g = gates().manager().byId(s.gateId());
-		if (g == null) {
-			Messages.send(p, "edit.gone");
-			return 0;
-		}
-		return doRepair(p, g);
+		if (g == null) Messages.send(p, "edit.gone");
+		return g;
+	}
+
+	/** Config repair.command-enabled: false = gates are only repaired by hand. */
+	private static boolean repairCommandAllowed(ServerPlayer p) {
+		if (GatesPlus.get().config().repair().commandEnabled()) return true;
+		Messages.send(p, "repair.command_disabled");
+		return false;
 	}
 
 	private static int repair(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
 		ServerPlayer p = player(c);
+		if (!repairCommandAllowed(p)) return 0;
 		Gate g = gates().resolve(p, str(c, "gate"), Perms.ADMIN_EDIT.check(p));
 		return g == null ? 0 : doRepair(p, g);
 	}
@@ -454,6 +506,16 @@ public final class GpCommand {
 		if (gates().isLocked(g) && !ownEdit) {
 			Messages.send(p, "edit.in_use", g.name());
 			return 0;
+		}
+		// config repair.max-distance (0 = unlimited); gatesplus.bypass.limits ignores it
+		int max = GatesPlus.get().config().repair().maxDistance();
+		if (max > 0 && !Perms.BYPASS_LIMITS.check(p)) {
+			BlockPos at = p.blockPosition();
+			boolean sameDim = GateManager.dimensionId(p.level()).equals(g.dimension());
+			if (!sameDim || GateGeometry.distanceToBox(g, at.getX(), at.getY(), at.getZ()) > max) {
+				Messages.send(p, "repair.too_far", g.name(), max);
+				return 0;
+			}
 		}
 		gates().repair(p, g);
 		if (own != null) gates().sessions().sync(p); // refresh "blocks x / y" in the info panel

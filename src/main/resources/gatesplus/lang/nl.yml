@@ -4,7 +4,7 @@ help: |-
   &e/gp create &7– start een nieuwe poort (je krijgt de selectiebijl)
   &e/gp get markerblock &7– markerblokken voor linksboven (1) en rechtsonder (2)
   &e/gp set block <blok> &7– kies het blok (&e/gp list blocks&7)
-  &e/gp set trigger &7– kies het trigger-blok met de bijl
+  &e/gp set trigger &7– kies het trigger-blok (met de bijl, of het blok waar je naar kijkt)
   &e/gp set direction <vertical|horizontal> &7– richting van de animatie
   &e/gp set animation <enabled|disabled> &7– animatie aan/uit
   &e/gp set redstone <normal|inverted> &7– omgekeerde redstone
@@ -14,9 +14,9 @@ help: |-
   &e/gp confirm <naam> &7– bouw de poort
   &e/gp cancel &7– stop de sessie
   &e/gp edit <id|naam> &7– pas een poort aan
-  &e/gp list &7– jouw poorten  &e/gp list all &7– alle poorten (admin)  &e/gp info <id|naam> &7– details
+  &e/gp list &7– jouw poorten  &e/gp list all &7– alle poorten (admin)  &e/gp info [id|naam] &7– details (zonder naam: je sessie)
   &e/gp repair [id|naam] &7– herstel met blokken uit je inventory (zonder naam: de poort die je bewerkt)
-  &e/gp remove <id|naam> &7– verwijder een poort
+  &e/gp remove [id|naam] &7– verwijder een poort (zonder naam: de poort die je bewerkt)
   &e/gp group create|delete|add|remove|list|members|gates|info &7– groepen
 no_permission: "&cDaar heb je geen rechten voor."
 
@@ -46,6 +46,7 @@ get:
     no_session: "&cMarkerblokken krijg je alleen tijdens een sessie: start eerst /gp create of /gp edit <poort>."
     done: "&aJe kreeg 2 markerblokken: &6linksboven (1) &aen &crechtsonder (2)&a. &7Plaats ze: elk blok zet meteen zijn eigen hoek. Opnieuw plaatsen verplaatst de marker; ze verdwijnen als de poort gebouwd wordt."
     done_click: "&aJe kreeg 2 markerblokken: &6linksboven (1) &aen &crechtsonder (2)&a. &7Plaats ze en klik erop met de bijl om de hoek te zetten; ze verdwijnen als de poort gebouwd wordt."
+    disabled: "&cMarkerblokken staan uit op deze server: selecteer met de bijl."
 
 session:
   none: "&cJe hebt geen actieve sessie. Start met /gp create of /gp edit."
@@ -54,6 +55,7 @@ session:
 
 create:
   started: "&aSessie gestart! &7Linkerklik = hoek 1 (linksboven) en hoek 2 (rechtsonder), rechterklik = laatste punt weg."
+  started_markers: "&aSessie gestart! &7Plaats de markerblokken: &61 &7= linksboven, &c2 &7= rechtsonder. Kapotslaan haalt die hoek weer weg."
   no_client_mod: "&7Tip: met de GatesPlus client-mod zie je mooiere markers en het info-venster als HUD (nu: nepblokken en de zijbalk)."
   max_gates: "&cJe hebt al het maximum aantal poorten ({0})."
 
@@ -77,6 +79,7 @@ set:
   trigger:
     need_corners: "&cZet eerst beide hoeken."
     mode: "&bTrigger-modus: &7linkerklik op het blok dat de poort moet bedienen (max {0} blokken van de poort)."
+    look_at: "&cKijk naar het blok dat de poort moet bedienen en typ dan /gp set trigger."
   redstone:
     normal: "&aRedstone: stroom = open."
     inverted: "&aRedstone omgekeerd: geen stroom = open."
@@ -120,6 +123,8 @@ gate:
   ambiguous: "&eMeerdere poorten heten '{0}': {1}. Gebruik het id of groep:naam."
   incomplete: "&ePoort {0}: {1} / {2} blokken. &7Ze werkt pas als ze af is: /gp repair {0}"
   broken: "&cPoort {0} is kapot en werkt niet meer: {1} / {2} blokken – /gp repair {0}"
+  incomplete_manual: "&ePoort {0}: {1} / {2} blokken. &7Ze werkt pas als ze af is: vul de gaten met de hand."
+  broken_manual: "&cPoort {0} is kapot en werkt niet meer: {1} / {2} blokken – vul de gaten met de hand."
   no_trigger: "&cHet trigger-blok van poort {0} is vernietigd; de poort staat open. Zet er een blok terug of kies een nieuw met /gp edit {0}."
   blocked: "&ePoort {0} kon niet volledig sluiten: er staat een blok in de opening."
   trigger_restored: "&aHet trigger-blok van poort {0} staat er weer; de poort werkt opnieuw."
@@ -140,10 +145,13 @@ list:
 
 info:
   header: "&6Poort {0}"
+  need_gate: "&cGeef een poort op (/gp info <id|naam>) of start eerst /gp create of /gp edit <poort>."
 
 rm:
   done: "&aPoort {0} (#{1}) verwijderd."
   not_owner: "&cAlleen de eigenaar (of een admin) mag poort {0} verwijderen."
+  need_gate: "&cGeef een poort op (/gp remove <id|naam>) of start eerst /gp edit <poort>."
+  new_gate: "&7Deze poort bestaat nog niet; stop de sessie met /gp cancel."
 
 repair:
   not_needed: "&7Poort {0} is niet kapot."
@@ -154,6 +162,8 @@ repair:
   partial: "&ePoort {0}: {1} / {2} blokken. Er ontbreken er nog."
   obstructed: "&cIn poort {0} staat iets in een gat; haal het weg om verder te herstellen."
   done: "&aPoort {0} hersteld: {1} / {2} blokken."
+  command_disabled: "&c/gp repair staat uit op deze server: vul de gaten van de poort met de hand met het juiste blok."
+  too_far: "&cJe staat te ver van poort {0}: kom binnen {1} blokken om ze te herstellen."
 
 chest:
   placed: "&eJe blokken liggen in een kist op &f{0} {1} {2}&e. De kist verdwijnt als ze leeg is."
@@ -220,6 +230,8 @@ panel:
     ok: "OK"
     incomplete: "ONVOLLEDIG – /gp repair"
     broken: "KAPOT – /gp repair"
+    incomplete_manual: "ONVOLLEDIG – vul met de hand"
+    broken_manual: "KAPOT – vul met de hand"
     no_trigger: "TRIGGER ONTBREEKT – zet hem terug"
   label:
     gate: "Poort"

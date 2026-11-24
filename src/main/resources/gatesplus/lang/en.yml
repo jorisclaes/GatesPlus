@@ -4,7 +4,7 @@ help: |-
   &e/gp create &7– start a new gate (you get the selection axe)
   &e/gp get markerblock &7– marker blocks for top left (1) and bottom right (2)
   &e/gp set block <block> &7– choose the block (&e/gp list blocks&7)
-  &e/gp set trigger &7– choose the trigger block with the axe
+  &e/gp set trigger &7– choose the trigger block (with the axe, or the block you look at)
   &e/gp set direction <vertical|horizontal> &7– animation direction
   &e/gp set animation <enabled|disabled> &7– animation on/off
   &e/gp set redstone <normal|inverted> &7– inverted redstone
@@ -14,9 +14,9 @@ help: |-
   &e/gp confirm <name> &7– build the gate
   &e/gp cancel &7– stop the session
   &e/gp edit <id|name> &7– change a gate
-  &e/gp list &7– your gates  &e/gp list all &7– all gates (admin)  &e/gp info <id|name> &7– details
+  &e/gp list &7– your gates  &e/gp list all &7– all gates (admin)  &e/gp info [id|name] &7– details (no name: your session)
   &e/gp repair [id|name] &7– repair using blocks from your inventory (no name: the gate you are editing)
-  &e/gp remove <id|name> &7– remove a gate
+  &e/gp remove [id|name] &7– remove a gate (no name: the gate you are editing)
   &e/gp group create|delete|add|remove|list|members|gates|info &7– groups
 no_permission: "&cYou don't have permission to do that."
 
@@ -46,6 +46,7 @@ get:
     no_session: "&cYou only get marker blocks during a session: start /gp create or /gp edit <gate> first."
     done: "&aYou got 2 marker blocks: &6top left (1) &aand &cbottom right (2)&a. &7Place them: each block sets its own corner right away. Placing one again moves that marker; they disappear when the gate is built."
     done_click: "&aYou got 2 marker blocks: &6top left (1) &aand &cbottom right (2)&a. &7Place them and click them with the axe to set the corner; they disappear when the gate is built."
+    disabled: "&cMarker blocks are turned off on this server: select with the axe."
 
 session:
   none: "&cYou have no active session. Start with /gp create or /gp edit."
@@ -54,6 +55,7 @@ session:
 
 create:
   started: "&aSession started! &7Left-click = corner 1 (top left) and corner 2 (bottom right), right-click = remove last point."
+  started_markers: "&aSession started! &7Place the marker blocks: &61 &7= top left, &c2 &7= bottom right. Breaking one removes that corner again."
   no_client_mod: "&7Tip: with the GatesPlus client mod you get nicer markers and the info panel as a HUD (now: fake blocks and the sidebar)."
   max_gates: "&cYou already have the maximum number of gates ({0})."
 
@@ -77,6 +79,7 @@ set:
   trigger:
     need_corners: "&cSet both corners first."
     mode: "&bTrigger mode: &7left-click the block that should operate the gate (max {0} blocks from the gate)."
+    look_at: "&cLook at the block that should operate the gate, then type /gp set trigger."
   redstone:
     normal: "&aRedstone: power = open."
     inverted: "&aInverted redstone: no power = open."
@@ -120,6 +123,8 @@ gate:
   ambiguous: "&eSeveral gates are called '{0}': {1}. Use the id or group:name."
   incomplete: "&eGate {0}: {1} / {2} blocks. &7It only works once it is complete: /gp repair {0}"
   broken: "&cGate {0} is broken and no longer works: {1} / {2} blocks – /gp repair {0}"
+  incomplete_manual: "&eGate {0}: {1} / {2} blocks. &7It only works once it is complete: fill the holes by hand."
+  broken_manual: "&cGate {0} is broken and no longer works: {1} / {2} blocks – fill the holes by hand."
   no_trigger: "&cThe trigger block of gate {0} was destroyed; the gate is open. Put a block back or choose a new one with /gp edit {0}."
   blocked: "&eGate {0} could not close completely: there is a block in the opening."
   trigger_restored: "&aThe trigger block of gate {0} is back; the gate works again."
@@ -140,10 +145,13 @@ list:
 
 info:
   header: "&6Gate {0}"
+  need_gate: "&cName a gate (/gp info <id|name>) or start /gp create or /gp edit <gate> first."
 
 rm:
   done: "&aGate {0} (#{1}) removed."
   not_owner: "&cOnly the owner (or an admin) may remove gate {0}."
+  need_gate: "&cName a gate (/gp remove <id|name>) or start /gp edit <gate> first."
+  new_gate: "&7This gate doesn't exist yet; stop the session with /gp cancel."
 
 repair:
   not_needed: "&7Gate {0} is not broken."
@@ -154,6 +162,8 @@ repair:
   partial: "&eGate {0}: {1} / {2} blocks. Some are still missing."
   obstructed: "&cSomething is in a hole of gate {0}; remove it to continue repairing."
   done: "&aGate {0} repaired: {1} / {2} blocks."
+  command_disabled: "&c/gp repair is turned off on this server: fill the holes of the gate by hand with the right block."
+  too_far: "&cYou are too far from gate {0}: come within {1} blocks to repair it."
 
 chest:
   placed: "&eYour blocks are in a chest at &f{0} {1} {2}&e. The chest disappears once it is empty."
@@ -220,6 +230,8 @@ panel:
     ok: "OK"
     incomplete: "INCOMPLETE – /gp repair"
     broken: "BROKEN – /gp repair"
+    incomplete_manual: "INCOMPLETE – fill by hand"
+    broken_manual: "BROKEN – fill by hand"
     no_trigger: "TRIGGER MISSING – put it back"
   label:
     gate: "Gate"
