@@ -42,7 +42,7 @@ Bouw poorten van (bijna) elk blok. Een poort gaat **vloeiend open en dicht met r
 >
 > | | Met client-mod | Zonder client-mod |
 > |---|---|---|
-> | Selectie | doorzichtige kaders (goud/rood/groen/blauw) | nepblokken die alleen jij ziet (goud = hoek 1, redstone = hoek 2, groen glas = randen, diamant = trigger) |
+> | Selectie | doorzichtige kaders (goud/rood/groen/blauw) | nepblokken die alleen jij ziet (goud = hoek 1, redstone = hoek 2, groen glas = randen, diamant = trigger); blokken in de weg blijven zichtbaar met een **rode gloei-omlijning** |
 > | Info-venster / dev-paneel | HUD-venster rechtsboven | scorebord-zijbalk rechts |
 > | Markerblokken | de eigen markerblokken met "1"/"2" op de textuur, ook in je inventory en hand (de server zelf houdt beton) | gele/rode beton met een zwevend "1"/"2" |
 >
@@ -84,7 +84,7 @@ Tijdens `/gp create` of `/gp edit` heb je een gloeiende **houten bijl** (de sele
 | **Rechterklik** | Haalt het laatst gezette punt weg: eerst het trigger-blok, dan hoek 2, dan hoek 1. |
 | **Linkerklik** in trigger-modus | Kiest het trigger-blok (na `/gp set trigger`). |
 
-Je ziet je selectie meteen: hoek 1 **goud**, hoek 2 **rood**, de rand van de poort **groen**, het trigger-blok **blauw** (pulserend). Blokken die het bouwen tegenhouden, worden **rood** gemarkeerd.
+Je ziet je selectie meteen: hoek 1 **goud**, hoek 2 **rood**, de rand van de poort **groen**, het trigger-blok **blauw** (pulserend). Blokken die het bouwen tegenhouden, worden meteen **rood** gemarkeerd (zonder client-mod: rode gloei-omlijning, ook door muren heen); haal ze weg en de markering verdwijnt vanzelf.
 
 ### Markerblokken
 
@@ -168,7 +168,7 @@ Elke poort heeft een **id** dat uniek is op de hele server (`#12`) en een **naam
 
 ## Hoe een poort werkt
 
-- **Alleen in lucht.** Een poort wordt alleen gebouwd waar lucht is (en markerblokken). Staat er iets in de weg, dan weigert `/gp confirm` en zie je de blokken in het rood. GatesPlus vervangt of verwijdert nooit bestaande blokken, dus je kunt er niet mee minen.
+- **Alleen in lucht.** Een poort wordt alleen gebouwd waar lucht is (en markerblokken). Staat er iets in de weg, dan zie je die blokken al tijdens het selecteren in het rood en weigert `/gp confirm` tot je ze zelf weggehaald hebt. GatesPlus vervangt of verwijdert nooit bestaande blokken, dus je kunt er niet mee minen.
 - **Vorm.** Elke rechthoekige doos: een muur, een vloer (valluik) of een dik blok, binnen de limieten uit de config.
 - **Trigger-blok.** Precies één per poort, maximaal `max-trigger-distance` blokken (standaard 5) van de poort. Het mag een gewoon blok zijn waar je een hendel op zet, of zelf een hendel, knop of drukplaat.
 - **Standaard dicht.** Zonder stroom op de trigger is de poort dicht; met stroom gaat ze open (of omgekeerd met `/gp set redstone inverted`).

@@ -533,9 +533,7 @@ public final class GateService {
 			if (other != null && other != existing) return fail(player, "confirm.overlap", other.name());
 			Gate otherTrigger = manager.gateWithTrigger(level, pos);
 			if (otherTrigger != null && otherTrigger != existing) return fail(player, "confirm.overlap_trigger", otherTrigger.name());
-			BlockState st = level.getBlockState(pos);
-			boolean ownBlock = existing != null && existing.contains(pos.getX(), pos.getY(), pos.getZ()) && st.is(oldBlock);
-			if (!st.isAir() && !ownBlock && !sessions.isMarker(level, pos)) invalid.add(pos);
+			if (inTheWay(level, pos, existing, oldBlock)) invalid.add(pos);
 		}
 		if (!invalid.isEmpty()) {
 			sessions.showInvalid(player, invalid);
@@ -544,6 +542,17 @@ public final class GateService {
 
 		if (edit) sessions.restoreReplacedGateBlocks(s);
 		return edit ? applyEdit(player, level, existing, cand, block, oldBlock) : applyCreate(player, level, cand, block);
+	}
+
+	/**
+	 * A block that stops the gate from being built here: anything but air, a session marker or (when
+	 * editing) a block of the gate itself. Gates never replace existing blocks; the player removes them.
+	 */
+	public boolean inTheWay(ServerLevel level, BlockPos pos, Gate existing, Block oldBlock) {
+		BlockState st = level.getBlockState(pos);
+		if (st.isAir()) return false;
+		if (existing != null && st.is(oldBlock) && existing.contains(pos.getX(), pos.getY(), pos.getZ())) return false;
+		return !sessions.isMarker(level, pos);
 	}
 
 	private boolean applyCreate(ServerPlayer player, ServerLevel level, Gate cand, Block block) {

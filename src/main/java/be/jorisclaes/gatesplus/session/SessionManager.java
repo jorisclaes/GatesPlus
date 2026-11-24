@@ -12,12 +12,26 @@ import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
+
+import com.mojang.math.Transformation;
+
+import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket;
+import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket;
+import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Display;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 
 import be.jorisclaes.gatesplus.GatesPlus;
 import be.jorisclaes.gatesplus.config.GatesPlusConfig;
@@ -28,6 +42,8 @@ import be.jorisclaes.gatesplus.gate.GateService;
 import be.jorisclaes.gatesplus.gate.InfoPanel;
 import be.jorisclaes.gatesplus.marker.MarkerBlocks;
 import be.jorisclaes.gatesplus.marker.MarkerLabels;
+import be.jorisclaes.gatesplus.mixin.BlockDisplayAccessor;
+import be.jorisclaes.gatesplus.mixin.DisplayAccessor;
 import be.jorisclaes.gatesplus.network.MarkersPayload;
 import be.jorisclaes.gatesplus.network.Network;
 import be.jorisclaes.gatesplus.network.PanelPayload;
@@ -42,7 +58,18 @@ public final class SessionManager {
 	private final Map<UUID, CreateSession> sessions = new HashMap<>();
 	/** Fallback markers (fake blocks) sent to players without the client mod, to restore later. */
 	private final Map<UUID, Set<BlockPos>> fakeBlocks = new HashMap<>();
+	/** Blocks in the way of the selected box (kept up to date while the session runs). */
 	private final Map<UUID, List<BlockPos>> invalid = new HashMap<>();
+	/** Without the client mod: glowing outlines (fake block displays) on the blocks in the way. */
+	private final Map<UUID, Map<BlockPos, Highlight>> highlights = new HashMap<>();
+
+	/** A fake block display only one player sees; state = the real block it outlines. */
+	private record Highlight(int entityId, BlockState state) {}
+
+	/** Glow colour of blocks in the way. */
+	private static final int BLOCKED_GLOW = 0xFF2020;
+	/** Larger boxes are not scanned live (confirm still checks every block). */
+	private static final int MAX_SCAN_VOLUME = 32_768;
 	/** Players without the client mod whose fake blocks must be sent again next tick. */
 	private final Set<UUID> resendFake = new HashSet<>();
 
@@ -299,6 +326,7 @@ public final class SessionManager {
 	public void onDisconnect(ServerPlayer player) {
 		CreateSession s = sessions.remove(player.getUUID());
 		fakeBlocks.remove(player.getUUID());
+		highlights.remove(player.getUUID());
 		invalid.remove(player.getUUID());
 		if (s == null) return;
 		if (s.type() == CreateSession.Type.EDIT) service.unlock(s.gateId());
@@ -435,6 +463,13 @@ public final class SessionManager {
 			return;
 		}
 		s.touch();
+		refresh(player, s);
+	}
+
+	/** Sends the selection, the blocks in the way and the panel again, without counting as activity. */
+	private void refresh(ServerPlayer player, CreateSession s) {
+		List<BlockPos> blocked = blockedPositions(player.level(), s);
+		invalid.put(player.getUUID(), blocked);
 		if (Network.hasClientMod(player)) {
 			Network.send(player, new SelectionSyncPayload(true, Optional.ofNullable(s.corner1()),
 					Optional.ofNullable(s.corner2()), Optional.ofNullable(s.trigger()),
@@ -442,8 +477,88 @@ public final class SessionManager {
 					invalid.getOrDefault(player.getUUID(), List.of())));
 		} else {
 			sendFakeMarkers(player, s);
+			showHighlights(player, blocked);
 		}
 		Panels.show(player, InfoPanel.forSession(player, s)); // HUD panel or sidebar
+	}
+
+	/**
+	 * The blocks in the selected box that stop the gate from being built (the player has to remove
+	 * them first), at most {@link SelectionSyncPayload#MAX_INVALID}.
+	 */
+	private List<BlockPos> blockedPositions(ServerLevel level, CreateSession s) {
+		if (!s.hasBox() || s.volume() > MAX_SCAN_VOLUME) return List.of();
+		if (s.dimension() != null && !s.dimension().equals(GateManager.dimensionId(level))) return List.of();
+		Gate existing = s.type() == CreateSession.Type.EDIT ? service.manager().byId(s.gateId()) : null;
+		Block oldBlock = existing != null ? service.manager().blockOf(existing) : null;
+		BlockPos a = s.corner1(), b = s.corner2();
+		List<BlockPos> out = new ArrayList<>();
+		for (BlockPos p : BlockPos.betweenClosed(a, b)) {
+			if (!level.isLoaded(p)) continue;
+			if (service.inTheWay(level, p, existing, oldBlock)) {
+				out.add(p.immutable());
+				if (out.size() >= SelectionSyncPayload.MAX_INVALID) break;
+			}
+		}
+		return out;
+	}
+
+	/**
+	 * Every 10 ticks: blocks placed in or removed from the selected box show up (or disappear) as
+	 * "in the way" without the player having to touch the selection.
+	 */
+	public void tickBlocked(MinecraftServer server) {
+		for (CreateSession s : sessions.values()) {
+			ServerPlayer p = server.getPlayerList().getPlayer(s.player());
+			if (p == null) continue;
+			List<BlockPos> blocked = blockedPositions(p.level(), s);
+			boolean changed = !blocked.equals(invalid.getOrDefault(p.getUUID(), List.of()));
+			if (!changed && !Network.hasClientMod(p)) {
+				Map<BlockPos, Highlight> shown = highlights.getOrDefault(p.getUUID(), Map.of());
+				changed = shown.size() != blocked.size();
+				for (BlockPos pos : blocked) {
+					Highlight h = shown.get(pos);
+					if (h == null || h.state() != p.level().getBlockState(pos)) changed = true;
+				}
+			}
+			if (changed) refresh(p, s);
+		}
+	}
+
+	/** Outlines the blocks in the way with a red glow (fake entities only this player sees). */
+	private void showHighlights(ServerPlayer player, List<BlockPos> blocked) {
+		clearHighlights(player);
+		if (blocked.isEmpty()) return;
+		ServerLevel level = player.level();
+		Map<BlockPos, Highlight> shown = new HashMap<>();
+		for (BlockPos p : blocked) {
+			BlockState real = level.getBlockState(p);
+			Display.BlockDisplay d = EntityTypes.BLOCK_DISPLAY.create(level, EntitySpawnReason.TRIGGERED);
+			if (d == null) continue;
+			// A slightly smaller copy hidden inside the real block: only its glow outline is seen
+			// (through walls too). Liquids and the like have no block model: red glass instead.
+			boolean model = real.getRenderShape() == RenderShape.MODEL;
+			float scale = model ? 0.98f : 1f, off = (1f - scale) / 2f;
+			d.setPos(p.getX(), p.getY(), p.getZ());
+			((BlockDisplayAccessor) d).gatesplus$setBlockState(model ? real : Blocks.STAINED_GLASS.red().defaultBlockState());
+			((DisplayAccessor) d).gatesplus$setTransformation(new Transformation(new Vector3f(off, off, off),
+					new Quaternionf(), new Vector3f(scale, scale, scale), new Quaternionf()));
+			((DisplayAccessor) d).gatesplus$setGlowColorOverride(BLOCKED_GLOW);
+			d.setGlowingTag(true);
+			player.connection.send(new ClientboundAddEntityPacket(d.getId(), d.getUUID(), p.getX(), p.getY(), p.getZ(),
+					0f, 0f, EntityTypes.BLOCK_DISPLAY, 0, Vec3.ZERO, 0d));
+			var data = d.getEntityData().getNonDefaultValues();
+			if (data != null) player.connection.send(new ClientboundSetEntityDataPacket(d.getId(), data));
+			shown.put(p.immutable(), new Highlight(d.getId(), real));
+		}
+		highlights.put(player.getUUID(), shown);
+	}
+
+	private void clearHighlights(ServerPlayer player) {
+		Map<BlockPos, Highlight> shown = highlights.remove(player.getUUID());
+		if (shown == null || shown.isEmpty()) return;
+		player.connection.send(new ClientboundRemoveEntitiesPacket(
+				shown.values().stream().mapToInt(Highlight::entityId).toArray()));
 	}
 
 	/**
@@ -472,6 +587,7 @@ public final class SessionManager {
 		}
 		Panels.hide(player, PanelPayload.INFO);
 		restoreFakeBlocks(player);
+		clearHighlights(player);
 	}
 
 	/** Fallback without the client mod: fake blocks only this player sees. */
@@ -479,6 +595,8 @@ public final class SessionManager {
 		restoreFakeBlocks(player);
 		if (s.dimension() != null && !s.dimension().equals(GateManager.dimensionId(player.level()))) return;
 		Map<BlockPos, BlockState> fake = new HashMap<>();
+		// never cover a block in the way: the player must see (and remove) it; it gets a red outline
+		Set<BlockPos> blocked = new HashSet<>(invalid.getOrDefault(player.getUUID(), List.of()));
 		if (s.hasBox()) {
 			BlockPos a = s.corner1(), b = s.corner2();
 			int x1 = Math.min(a.getX(), b.getX()), x2 = Math.max(a.getX(), b.getX());
@@ -490,16 +608,14 @@ public final class SessionManager {
 					for (int y = y1; y <= y2; y++)
 						for (int z = z1; z <= z2; z++) {
 							int onEdge = (x == x1 || x == x2 ? 1 : 0) + (y == y1 || y == y2 ? 1 : 0) + (z == z1 || z == z2 ? 1 : 0);
-							if (onEdge >= 2) fake.put(new BlockPos(x, y, z), edge);
+							BlockPos p = new BlockPos(x, y, z);
+							if (onEdge >= 2 && !blocked.contains(p)) fake.put(p, edge);
 						}
 			}
 		}
 		if (s.corner1() != null) fake.put(s.corner1(), Blocks.GOLD_BLOCK.defaultBlockState());
 		if (s.corner2() != null) fake.put(s.corner2(), Blocks.REDSTONE_BLOCK.defaultBlockState());
 		if (s.trigger() != null) fake.put(s.trigger(), Blocks.DIAMOND_BLOCK.defaultBlockState());
-		for (BlockPos p : invalid.getOrDefault(player.getUUID(), List.of())) {
-			fake.put(p, Blocks.STAINED_GLASS.red().defaultBlockState());
-		}
 		for (var e : fake.entrySet()) player.connection.send(new ClientboundBlockUpdatePacket(e.getKey(), e.getValue()));
 		fakeBlocks.put(player.getUUID(), new HashSet<>(fake.keySet()));
 	}

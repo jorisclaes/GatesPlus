@@ -24,6 +24,9 @@ public interface DisplayAccessor {
 	@Invoker("setBrightnessOverride")
 	void gatesplus$setBrightnessOverride(net.minecraft.util.Brightness brightness);
 
+	@Invoker("setGlowColorOverride")
+	void gatesplus$setGlowColorOverride(int rgb);
+
 	@Invoker("setBillboardConstraints")
 	void gatesplus$setBillboardConstraints(Display.BillboardConstraints constraints);
 }
