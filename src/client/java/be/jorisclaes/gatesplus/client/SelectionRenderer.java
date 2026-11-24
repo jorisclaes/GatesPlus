@@ -54,6 +54,11 @@ final class SelectionRenderer {
 		// the area the trigger may be in: while choosing it, and as long as none is set
 		if (box != null && (s.triggerMode() || s.trigger().isEmpty())) {
 			Gizmos.cuboid(box.inflate(s.triggerRange()), GizmoStyle.stroke(TRIGGER, 3f)).setAlwaysOnTop();
+			drawOutsideRange(box.inflate(s.triggerRange()));
+		}
+		// real blocks just outside the range (they can't be the trigger): red like blocks in the way
+		for (BlockPos p : s.outOfRange()) {
+			Gizmos.cuboid(new AABB(p).inflate(0.01), GizmoStyle.strokeAndFill(RED, 2f, alpha(RED, 0x55)));
 		}
 		s.trigger().ifPresent(t -> {
 			double pulse = 0.5 + 0.5 * Math.sin(System.currentTimeMillis() / 200.0);
@@ -73,6 +78,22 @@ final class SelectionRenderer {
 
 		for (BlockPos p : s.invalid()) {
 			Gizmos.cuboid(new AABB(p).inflate(0.01), GizmoStyle.strokeAndFill(RED, 2f, alpha(RED, 0x55)));
+		}
+	}
+
+	/**
+	 * The air one block outside the trigger range turns red: six 1-block slabs around the range
+	 * box, slightly inset so they hide inside solid blocks and never z-fight with block faces.
+	 */
+	private static void drawOutsideRange(AABB r) {
+		double in = 0.02;
+		AABB o = r.inflate(1);
+		AABB[] slabs = {
+				new AABB(o.minX, o.minY, o.minZ, o.maxX, r.minY, o.maxZ), new AABB(o.minX, r.maxY, o.minZ, o.maxX, o.maxY, o.maxZ),
+				new AABB(o.minX, r.minY, o.minZ, r.minX, r.maxY, o.maxZ), new AABB(r.maxX, r.minY, o.minZ, o.maxX, r.maxY, o.maxZ),
+				new AABB(r.minX, r.minY, o.minZ, r.maxX, r.maxY, r.minZ), new AABB(r.minX, r.minY, r.maxZ, r.maxX, r.maxY, o.maxZ) };
+		for (AABB slab : slabs) {
+			Gizmos.cuboid(slab.deflate(in), GizmoStyle.fill(alpha(RED, 0x30)));
 		}
 	}
 

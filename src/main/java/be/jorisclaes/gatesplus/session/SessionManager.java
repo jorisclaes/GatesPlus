@@ -63,6 +63,11 @@ public final class SessionManager {
 	/** Without the client mod: glowing outlines (fake block displays) on the blocks in the way. */
 	private final Map<UUID, Map<BlockPos, Highlight>> highlights = new HashMap<>();
 
+	/** Without the client mod: red marks just outside the trigger range (fake entity ids per player). */
+	private final Map<UUID, int[]> rangeMarks = new HashMap<>();
+	/** At most this many blocks outside the trigger range get a red outline (nearest to the player). */
+	private static final int MAX_RANGE_MARKS = 512;
+
 	/** A fake block display only one player sees; state = the real block it outlines. */
 	private record Highlight(int entityId, BlockState state) {}
 
@@ -336,6 +341,7 @@ public final class SessionManager {
 		CreateSession s = sessions.remove(player.getUUID());
 		fakeBlocks.remove(player.getUUID());
 		highlights.remove(player.getUUID());
+		rangeMarks.remove(player.getUUID());
 		invalid.remove(player.getUUID());
 		if (s == null) return;
 		if (s.type() == CreateSession.Type.EDIT) service.unlock(s.gateId());
@@ -579,14 +585,16 @@ public final class SessionManager {
 	private void refresh(ServerPlayer player, CreateSession s) {
 		List<BlockPos> blocked = blockedPositions(player.level(), s);
 		invalid.put(player.getUUID(), blocked);
+		List<BlockPos> outside = outOfRangeBlocks(player, s);
 		if (Network.hasClientMod(player)) {
 			Network.send(player, new SelectionSyncPayload(true, Optional.ofNullable(s.corner1()),
 					Optional.ofNullable(s.corner2()), Optional.ofNullable(s.trigger()),
 					s.mode() == CreateSession.Mode.TRIGGER, GatesPlus.get().config().limits().maxTriggerDistance(),
-					invalid.getOrDefault(player.getUUID(), List.of())));
+					invalid.getOrDefault(player.getUUID(), List.of()), outside));
 		} else {
 			sendFakeMarkers(player, s);
 			showHighlights(player, blocked);
+			showRangeMarks(player, s, outside);
 		}
 		Panels.show(player, InfoPanel.forSession(player, s)); // HUD panel or sidebar
 	}
@@ -663,6 +671,109 @@ public final class SessionManager {
 		highlights.put(player.getUUID(), shown);
 	}
 
+	/** Shell just outside the trigger range: {minX, minY, minZ, maxX, maxY, maxZ} (inclusive), or null. */
+	private static int[] rangeShell(CreateSession s) {
+		if (!showTriggerRange(s)) return null;
+		int r = GatesPlus.get().config().limits().maxTriggerDistance() + 1;
+		BlockPos a = s.corner1(), b = s.corner2();
+		int[] box = { Math.min(a.getX(), b.getX()) - r, Math.min(a.getY(), b.getY()) - r, Math.min(a.getZ(), b.getZ()) - r,
+				Math.max(a.getX(), b.getX()) + r, Math.max(a.getY(), b.getY()) + r, Math.max(a.getZ(), b.getZ()) + r };
+		long sum = (long) (box[3] - box[0]) + (box[4] - box[1]) + (box[5] - box[2]);
+		return sum > 1000 ? null : box; // absurdly large: don't mark
+	}
+
+	/**
+	 * Real blocks one block outside the trigger range (they can't be the trigger) that touch air,
+	 * nearest to the player first, at most {@link #MAX_RANGE_MARKS}. Empty when the range isn't shown.
+	 */
+	private List<BlockPos> outOfRangeBlocks(ServerPlayer player, CreateSession s) {
+		int[] b = rangeShell(s);
+		ServerLevel level = player.level();
+		if (b == null || (s.dimension() != null && !s.dimension().equals(GateManager.dimensionId(level)))) return List.of();
+		List<BlockPos> out = new ArrayList<>();
+		BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
+		for (int x = b[0]; x <= b[3]; x++) {
+			for (int y = b[1]; y <= b[4]; y++) {
+				boolean side = x == b[0] || x == b[3] || y == b[1] || y == b[4];
+				for (int z = b[2]; z <= b[5]; z += side || z == b[5] ? 1 : Math.max(1, b[5] - b[2])) {
+					m.set(x, y, z);
+					if (level.isOutsideBuildHeight(m) || !level.isLoaded(m)) continue;
+					BlockState st = level.getBlockState(m);
+					if (st.isAir() || !touchesAir(level, m)) continue;
+					out.add(m.immutable());
+				}
+			}
+		}
+		BlockPos at = player.blockPosition();
+		out.sort(java.util.Comparator.comparingDouble(p -> p.distSqr(at)));
+		return out.size() > MAX_RANGE_MARKS ? List.copyOf(out.subList(0, MAX_RANGE_MARKS)) : out;
+	}
+
+	private static boolean touchesAir(ServerLevel level, BlockPos pos) {
+		for (Direction d : Direction.values()) {
+			BlockPos n = pos.relative(d);
+			if (level.isLoaded(n) && level.getBlockState(n).isAir()) return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Without the client mod: the layer just outside the trigger range turns red. Its air is six
+	 * stretched red glass displays (one per side, hidden inside solid blocks), its real blocks get
+	 * a red glow outline like the blocks in the way. Fake entities only this player sees.
+	 */
+	private void showRangeMarks(ServerPlayer player, CreateSession s, List<BlockPos> outside) {
+		clearRangeMarks(player);
+		int[] b = rangeShell(s);
+		if (b == null) return;
+		ServerLevel level = player.level();
+		List<Integer> ids = new ArrayList<>();
+		// six slabs, a little inset so they never z-fight with the faces of neighbouring blocks
+		int[][] slabs = {
+				{ b[0], b[1], b[2], b[3], b[1], b[5] }, { b[0], b[4], b[2], b[3], b[4], b[5] },
+				{ b[0], b[1] + 1, b[2], b[0], b[4] - 1, b[5] }, { b[3], b[1] + 1, b[2], b[3], b[4] - 1, b[5] },
+				{ b[0] + 1, b[1] + 1, b[2], b[3] - 1, b[4] - 1, b[2] }, { b[0] + 1, b[1] + 1, b[5], b[3] - 1, b[4] - 1, b[5] } };
+		BlockState glass = Blocks.STAINED_GLASS.red().defaultBlockState();
+		for (int[] sl : slabs) {
+			float in = 0.02f;
+			Vector3f size = new Vector3f(sl[3] - sl[0] + 1 - 2 * in, sl[4] - sl[1] + 1 - 2 * in, sl[5] - sl[2] + 1 - 2 * in);
+			Integer id = sendFakeDisplay(player, level, new BlockPos(sl[0], sl[1], sl[2]), glass,
+					new Vector3f(in, in, in), size, -1);
+			if (id != null) ids.add(id);
+		}
+		for (BlockPos p : outside) {
+			Integer id = sendFakeDisplay(player, level, p, level.getBlockState(p).getRenderShape() == RenderShape.MODEL
+					? level.getBlockState(p) : glass, new Vector3f(0.01f, 0.01f, 0.01f), new Vector3f(0.98f, 0.98f, 0.98f),
+					BLOCKED_GLOW);
+			if (id != null) ids.add(id);
+		}
+		rangeMarks.put(player.getUUID(), ids.stream().mapToInt(Integer::intValue).toArray());
+	}
+
+	/** Sends a block display only this player sees; glow = RGB outline colour, or -1 for none. */
+	private static Integer sendFakeDisplay(ServerPlayer player, ServerLevel level, BlockPos p, BlockState state,
+			Vector3f offset, Vector3f scale, int glow) {
+		Display.BlockDisplay d = EntityTypes.BLOCK_DISPLAY.create(level, EntitySpawnReason.TRIGGERED);
+		if (d == null) return null;
+		d.setPos(p.getX(), p.getY(), p.getZ());
+		((BlockDisplayAccessor) d).gatesplus$setBlockState(state);
+		((DisplayAccessor) d).gatesplus$setTransformation(new Transformation(offset, new Quaternionf(), scale, new Quaternionf()));
+		if (glow >= 0) {
+			((DisplayAccessor) d).gatesplus$setGlowColorOverride(glow);
+			d.setGlowingTag(true);
+		}
+		player.connection.send(new ClientboundAddEntityPacket(d.getId(), d.getUUID(), p.getX(), p.getY(), p.getZ(),
+				0f, 0f, EntityTypes.BLOCK_DISPLAY, 0, Vec3.ZERO, 0d));
+		var data = d.getEntityData().getNonDefaultValues();
+		if (data != null) player.connection.send(new ClientboundSetEntityDataPacket(d.getId(), data));
+		return d.getId();
+	}
+
+	private void clearRangeMarks(ServerPlayer player) {
+		int[] ids = rangeMarks.remove(player.getUUID());
+		if (ids != null && ids.length > 0) player.connection.send(new ClientboundRemoveEntitiesPacket(ids));
+	}
+
 	private void clearHighlights(ServerPlayer player) {
 		Map<BlockPos, Highlight> shown = highlights.remove(player.getUUID());
 		if (shown == null || shown.isEmpty()) return;
@@ -697,6 +808,7 @@ public final class SessionManager {
 		Panels.hide(player, PanelPayload.INFO);
 		restoreFakeBlocks(player);
 		clearHighlights(player);
+		clearRangeMarks(player);
 	}
 
 	/** Fallback without the client mod: fake blocks only this player sees. */
