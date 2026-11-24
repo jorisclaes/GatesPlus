@@ -405,13 +405,15 @@ public final class SessionManager {
 		}
 
 		// A corner marker selects itself and always sets its own corner (top-left = 1,
-		// bottom-right = 2). Any other block selects the air in front of the clicked face
-		// (gates are only built in air; markers are replaced by the gate).
+		// bottom-right = 2). A block of the gate being edited selects itself (the marker takes its
+		// place until the session ends), so an undone corner of a closed gate can be set again.
+		// Any other block selects the air in front of the clicked face (gates are only built in
+		// air; markers are replaced by the gate).
 		CreateSession.PlacedMarker clickedMarker = markerAt(level, clicked);
 		CreateSession.Point markerCorner = clickedMarker != null ? clickedMarker.corner()
 				: MarkerBlocks.cornerOfCustom(level.getBlockState(clicked));
 		boolean hadBox = s.hasBox();
-		BlockPos pos = markerCorner != null ? clicked : clicked.relative(face);
+		BlockPos pos = markerCorner != null || editedGateBlock(level, s, clicked) ? clicked : clicked.relative(face);
 		String suffix = markerCorner != null ? Messages.raw(player, "wand.on_marker") : "";
 		CreateSession.SetResult r = markerCorner != null ? s.setCorner(markerCorner, pos) : s.clickCorner(pos);
 		if (markerCorner == null) {
@@ -508,12 +510,23 @@ public final class SessionManager {
 			takeBack(old);
 			if (!old.fromWand()) MarkerBlocks.giveBack(player, corner);
 		}
-		if (level.getBlockState(pos).isAir() && !level.isOutsideBuildHeight(pos)) {
+		BlockState here = level.getBlockState(pos);
+		// a block of the gate being edited: the marker replaces it until the session ends
+		BlockState replaced = editedGateBlock(level, s, pos) ? here : null;
+		if ((here.isAir() || replaced != null) && !level.isOutsideBuildHeight(pos)) {
 			level.setBlock(pos, MarkerBlocks.blockFor(corner).defaultBlockState(), net.minecraft.world.level.block.Block.UPDATE_ALL);
 			java.util.UUID label = MarkerBlocks.custom() ? null : MarkerLabels.spawn(level, pos, corner);
-			s.putPlacedMarker(corner, level, pos, null, label, true);
+			s.putPlacedMarker(corner, level, pos, replaced, label, true);
 		}
 		broadcastMarkers();
+	}
+
+	/** True when pos holds a block of the gate this edit session is editing. */
+	private boolean editedGateBlock(ServerLevel level, CreateSession s, BlockPos pos) {
+		if (s.type() != CreateSession.Type.EDIT) return false;
+		Gate gate = service.manager().byId(s.gateId());
+		return gate != null && service.manager().gateAt(level, pos) == gate
+				&& level.getBlockState(pos).is(service.manager().blockOf(gate));
 	}
 
 	/**
@@ -714,8 +727,36 @@ public final class SessionManager {
 		fakeCorner(fake, level, s.corner1(), CreateSession.Point.CORNER1);
 		fakeCorner(fake, level, s.corner2(), CreateSession.Point.CORNER2);
 		if (s.trigger() != null) fake.put(s.trigger(), Blocks.DIAMOND_BLOCK.defaultBlockState());
+		if (showTriggerRange(s)) fakeRangeFrame(fake, level, s);
 		for (var e : fake.entrySet()) player.connection.send(new ClientboundBlockUpdatePacket(e.getKey(), e.getValue()));
 		fakeBlocks.put(player.getUUID(), new HashSet<>(fake.keySet()));
+	}
+
+	/** The trigger range is shown while choosing the trigger, and as long as none is set. */
+	private static boolean showTriggerRange(CreateSession s) {
+		return s.hasBox() && (s.mode() == CreateSession.Mode.TRIGGER || s.trigger() == null);
+	}
+
+	/**
+	 * Without the client mod: the edges of the area the trigger may be in (the gate box grown by
+	 * max-trigger-distance) as light blue glass, only in air so no real block is ever hidden.
+	 */
+	private static void fakeRangeFrame(Map<BlockPos, BlockState> fake, ServerLevel level, CreateSession s) {
+		int r = GatesPlus.get().config().limits().maxTriggerDistance();
+		BlockPos a = s.corner1(), b = s.corner2();
+		int x1 = Math.min(a.getX(), b.getX()) - r, x2 = Math.max(a.getX(), b.getX()) + r;
+		int y1 = Math.min(a.getY(), b.getY()) - r, y2 = Math.max(a.getY(), b.getY()) + r;
+		int z1 = Math.min(a.getZ(), b.getZ()) - r, z2 = Math.max(a.getZ(), b.getZ()) + r;
+		if ((long) (x2 - x1) + (y2 - y1) + (z2 - z1) > 3000) return; // absurdly large: skip
+		BlockState glass = Blocks.STAINED_GLASS.lightBlue().defaultBlockState();
+		List<BlockPos> edge = new ArrayList<>();
+		for (int x = x1; x <= x2; x++) for (int y : new int[] { y1, y2 }) for (int z : new int[] { z1, z2 }) edge.add(new BlockPos(x, y, z));
+		for (int y = y1; y <= y2; y++) for (int x : new int[] { x1, x2 }) for (int z : new int[] { z1, z2 }) edge.add(new BlockPos(x, y, z));
+		for (int z = z1; z <= z2; z++) for (int x : new int[] { x1, x2 }) for (int y : new int[] { y1, y2 }) edge.add(new BlockPos(x, y, z));
+		for (BlockPos p : edge) {
+			if (fake.containsKey(p) || level.isOutsideBuildHeight(p) || !level.isLoaded(p)) continue;
+			if (level.getBlockState(p).isAir()) fake.put(p, glass);
+		}
 	}
 
 	private void fakeCorner(Map<BlockPos, BlockState> fake, ServerLevel level, BlockPos pos, CreateSession.Point corner) {

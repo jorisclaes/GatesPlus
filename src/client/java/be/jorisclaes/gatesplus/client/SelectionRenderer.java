@@ -51,8 +51,10 @@ final class SelectionRenderer {
 			Gizmos.cuboid(new AABB(c2).inflate(0.02), GizmoStyle.strokeAndFill(RED, 4f, alpha(RED, 0x70))).setAlwaysOnTop();
 		}
 
-		if (box != null && s.triggerMode()) {
-			Gizmos.cuboid(box.inflate(s.triggerRange()), GizmoStyle.stroke(alpha(BLUE, 0x60), 1f));
+		// the area the trigger may be in: while choosing it, and as long as none is set
+		if (box != null && (s.triggerMode() || s.trigger().isEmpty())) {
+			Gizmos.cuboid(box.inflate(s.triggerRange()), GizmoStyle.strokeAndFill(TRIGGER, 3f, alpha(TRIGGER, 0x14)))
+					.setAlwaysOnTop();
 		}
 		s.trigger().ifPresent(t -> {
 			double pulse = 0.5 + 0.5 * Math.sin(System.currentTimeMillis() / 200.0);

@@ -92,9 +92,10 @@ Tijdens `/gp create` of `/gp edit` heb je een gloeiende **houten bijl** (de sele
 | **Linkerklik** op een blok | Zet een hoek op het **luchtblok vóór** het vlak waarop je klikt, en plaatst daar het **markerblok** van die hoek (gele "1" of rode "2"), net alsof je de marker zelf zette. Eerste klik = hoek 1, tweede = hoek 2, daarna verplaats je hoek 2 (de oude marker verdwijnt). Staat daar water of gras, dan zie alleen jij de marker. |
 | **Linkerklik** op een markerblok | Zet de hoek **op het markerblok zelf** (zie hieronder). |
 | **Rechterklik** | Haalt het laatst gezette punt weg: eerst het trigger-blok, dan hoek 2, dan hoek 1. De marker van die hoek verdwijnt mee (een marker uit je inventory komt terug als item). |
+| **Linkerklik** op een blok van de poort die je bewerkt (`/gp edit`) | Zet de hoek **op dat poortblok**; de marker neemt tijdelijk zijn plaats in (zo zet je een ongedane hoek van een dichte poort terug). Bij confirm/cancel komt het poortblok terug. |
 | **Linkerklik** in trigger-modus | Kiest het trigger-blok (na `/gp set trigger`). |
 
-Je ziet je selectie meteen: hoek 1 **goud**, hoek 2 **rood**, de rand van de poort **groen**, het trigger-blok **felcyaan** met een dikke rand en een pulserende witte omlijning (ook door muren heen). Blokken die het bouwen tegenhouden, worden meteen **rood** gemarkeerd (zonder client-mod: rode gloei-omlijning, ook door muren heen); haal ze weg en de markering verdwijnt vanzelf.
+Je ziet je selectie meteen: hoek 1 **goud**, hoek 2 **rood**, de rand van de poort **groen**, het trigger-blok **felcyaan** met een dikke rand en een pulserende witte omlijning (ook door muren heen). Zolang je nog geen trigger hebt (of in trigger-modus) zie je ook een **cyaan kader** rond de poort: het gebied waarin het trigger-blok moet liggen (`max-trigger-distance`). Zonder client-mod is dat kader **lichtblauw glas** op de randen, alleen in de lucht. Blokken die het bouwen tegenhouden, worden meteen **rood** gemarkeerd (zonder client-mod: rode gloei-omlijning, ook door muren heen); haal ze weg en de markering verdwijnt vanzelf.
 
 ### Markerblokken
 
