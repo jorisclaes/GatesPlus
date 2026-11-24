@@ -134,6 +134,15 @@ public final class SessionManager {
 		sessions.put(player.getUUID(), s);
 		service.lock(gate);
 		giveTools(player);
+		// the corners get real marker blocks, exactly as when the gate was created with the axe
+		// (a closed gate: the marker takes the place of the gate block until the session ends)
+		ServerLevel level = service.level(gate);
+		if (level != null) {
+			for (CreateSession.Point corner : new CreateSession.Point[] { CreateSession.Point.CORNER1, CreateSession.Point.CORNER2 }) {
+				BlockPos pos = corner == CreateSession.Point.CORNER1 ? s.corner1() : s.corner2();
+				if (level.isLoaded(pos)) placeWandMarker(player, level, s, pos, corner);
+			}
+		}
 		sync(player);
 		return s;
 	}

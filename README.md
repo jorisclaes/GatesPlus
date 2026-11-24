@@ -108,6 +108,7 @@ Om een hoek midden in de lucht te zetten gebruik je markerblokken:
 Je krijgt er twee: een **gele "1"** (linksboven, hoek 1) en een **rode "2"** (rechtsonder, hoek 2). Standaard zijn het gele en rode betonblokken met een glinster; geplaatst krijgen ze een zwevend cijfer erboven. (Met `session.custom-marker-blocks: true` zijn het eigen blokken met het cijfer op de textuur.) Plaats ze waar de hoeken moeten komen: **plaatsen zet meteen de hoek**, net alsof je er met de bijl op klikt (klikken met de bijl mag ook). Elk blok zet altijd zijn eigen hoek, in welke volgorde je ze ook plaatst. Een serverbeheerder kan dit uitzetten met `session.marker-sets-corner: false`; dan moet je na het plaatsen nog met de bijl op de marker klikken.
 
 - Er staat altijd hoogstens **één "1" en één "2"**: plaats je een marker opnieuw, dan verdwijnt de oude en verhuist de hoek mee.
+- **Bij `/gp edit`** krijgen de hoeken van de poort meteen echte markerblokken, net zoals bij het maken (bij een dichte poort nemen ze tijdelijk de plaats van het poortblok in).
 - **Bij `/gp edit` van een dichte poort** staan op de hoeken poortblokken. Rechtsklik dan met een marker **op een blok van die poort**: het poortblok wordt tijdelijk de marker. Bij `/gp confirm`, `/gp cancel` of als je de marker kapotslaat, komt het poortblok terug (je betaalt niets en de poort raakt niet kapot).
 - Markerblokken krijg je **alleen tijdens een sessie** (`/gp create` of `/gp edit`).
 - Markers ín de poort verdwijnen vanzelf als de poort gebouwd wordt.
